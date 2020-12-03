@@ -17,8 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from setuptools import setup, Extension, find_packages
-
+from setuptools import find_packages, setup, Extension
 
 setup(
     name='amazon.ion',
@@ -46,12 +45,17 @@ setup(
     ext_modules=[
         Extension(
             'amazon.ion.ionc',
+            sources=['amazon/ion/ioncmodule.c'],
             include_dirs=['amazon/ion', '/usr/local/include/ionc', '/usr/local/include/decNumber'],
-            libraries=['ionc', 'decNumber'],
-            #library_dirs=['/Users/greggt/Documents/workspace/ion-c/build/release/ionc', '/Users/greggt/Documents/workspace/ion-c/build/release/decNumber'],
-            #runtime_library_dirs=['/Users/greggt/Documents/workspace/ion-c/build/release/ionc', '/Users/greggt/Documents/workspace/ion-c/build/release/decNumber'],
+            # libraries=['ionc', 'decNumber'],
+            library_dirs=['/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc', '/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber', '/usr/local/amazon/lib']
+            # runtime_library_dirs=['/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc', '/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber'],
             #extra_link_args=['-Wl,-rpath,/Users/greggt/Documents/workspace/ion-c/build/release/ionc:/Users/greggt/Documents/workspace/ion-c/build/release/decNumber'],
-            sources=['amazon/ion/ioncmodule.c']
         ),
+        # Extension(
+        #     'spam',
+        #     sources=['amazon/ion/spammodule.c'],
+        #     include_dirs=['amazon/ion', '/usr/local/include/ionc', '/usr/local/include/decNumber'],
+        # ),
     ],
 )
