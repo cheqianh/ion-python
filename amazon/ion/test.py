@@ -1,7 +1,5 @@
+from amazon.ion.simpleion import dump_extension
 import ionc
 
-print("start.....")
-ionc.helloworld()
-
-
-
+if __name__ == "__main__":
+    dump_extension()

@@ -24,10 +24,10 @@ from os.path import isfile, join, abspath, split, isdir
 
 _PYPY = hasattr(sys, 'pypy_translation_info')
 
-_IONC_LOCATION = abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'build', 'release'))
+_IONC_LOCATION = abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'ion-c', 'build', 'release'))
 _IONC_INCLUDES_LOCATIONS = {
-    'ionc': abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'ionc', 'include', 'ionc')),
-    'decNumber': abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'decNumber', 'include', 'decNumber'))
+    'ionc': abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'ion-c', 'ionc', 'include', 'ionc')),
+    'decNumber': abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'ion-c', 'decNumber', 'include', 'decNumber'))
 }
 _USERLIB_LOCATION = abspath(join(os.sep, 'usr', 'local', 'lib'))
 _USERINCLUDE_LOCATION = abspath(join(os.sep, 'usr', 'local', 'include'))

@@ -47,10 +47,10 @@ setup(
             'amazon.ion.ionc',
             sources=['amazon/ion/ioncmodule.c'],
             include_dirs=['amazon/ion', '/usr/local/include/ionc', '/usr/local/include/decNumber'],
-            # libraries=['ionc', 'decNumber'],
-            library_dirs=['/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc', '/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber', '/usr/local/amazon/lib']
-            # runtime_library_dirs=['/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc', '/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber'],
-            #extra_link_args=['-Wl,-rpath,/Users/greggt/Documents/workspace/ion-c/build/release/ionc:/Users/greggt/Documents/workspace/ion-c/build/release/decNumber'],
+            libraries=['ionc', 'decNumber'],
+            library_dirs=['/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc', '/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber', '/usr/local/lib'],
+            runtime_library_dirs=['/usr/local/lib'],
+            extra_link_args=['-Wl,-rpath,/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc:/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber'],
         ),
         # Extension(
         #     'spam',
