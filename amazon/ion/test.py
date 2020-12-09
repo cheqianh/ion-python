@@ -1,5 +1,8 @@
-from amazon.ion.simpleion import dump_extension
+from io import FileIO
+
 import ionc
 
 if __name__ == "__main__":
-    dump_extension()
+    obj = {'gege': 'xixi'}
+    res = ionc.helloworld()
+    print(res)

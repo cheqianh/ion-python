@@ -52,10 +52,5 @@ setup(
             runtime_library_dirs=['/usr/local/lib'],
             extra_link_args=['-Wl,-rpath,/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc:/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber'],
         ),
-        # Extension(
-        #     'spam',
-        #     sources=['amazon/ion/spammodule.c'],
-        #     include_dirs=['amazon/ion', '/usr/local/include/ionc', '/usr/local/include/decNumber'],
-        # ),
     ],
 )
