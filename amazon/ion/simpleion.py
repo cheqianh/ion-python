@@ -26,6 +26,7 @@ from itertools import chain
 
 import six
 
+import ionc
 from amazon.ion.reader_text import text_reader
 from amazon.ion.writer_text import text_writer
 from .core import IonEvent, IonEventType, IonType, ION_STREAM_END_EVENT, Timestamp, ION_VERSION_MARKER_EVENT
@@ -453,3 +454,26 @@ def loads(ion_str, catalog=None, single_value=True, encoding='utf-8', cls=None, 
     return load(ion_buffer, catalog=catalog, single_value=single_value, encoding=encoding, cls=cls,
                 object_hook=object_hook, parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant,
                 object_pairs_hook=object_pairs_hook, use_decimal=use_decimal)
+
+
+def dump_extension(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=False, ensure_ascii=True,
+                check_circular=True, allow_nan=True, cls=None, indent=None,
+                separators=None, encoding='utf-8', default=None, use_decimal=True, namedtuple_as_object=True,
+                tuple_as_array=True, bigint_as_string=False, sort_keys=False, item_sort_key=None, for_json=None,
+                ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False, tuple_as_sexp=False,
+                omit_version_marker=False, **kw):
+    res = ionc.ionc_write(obj, binary, sequence_as_stream, tuple_as_sexp)
+    fp.write(res)
+
+
+
+def load_extension(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
+                    parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
+    data = fp.read()
+    data = data if isinstance(data, bytes) else bytes(data, encoding)
+    return ionc.ionc_read(data, single_value, False)
+
+
+c_ext = 1
+dump = dump_extension if c_ext else dump
+load = load_extension if c_ext else load
