@@ -91,7 +91,7 @@ def parametrize(*values):
         real_decorator = pytest.mark.parametrize(
             argnames=[argname],
             argvalues=values,
-            ids=lambda x: str(x).replace('.', '_')
+            # ids=lambda x: str(x).replace('.', '_')
         )
         return real_decorator(func)
 

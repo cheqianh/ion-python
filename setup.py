@@ -17,30 +17,53 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 
 
-setup(
-    name='amazon.ion',
-    version='0.7.0',
-    description='A Python implementation of Amazon Ion.',
-    url='http://github.com/amzn/ion-python',
-    author='Amazon Ion Team',
-    author_email='ion-team@amazon.com',
-    license='Apache License 2.0',
+def run_setup(c_ext):
+    if c_ext:
+        kw = dict(
+            ext_modules=[
+                Extension(
+                    'amazon.ion.ionc',
+                    sources=['amazon/ion/ioncmodule.c'],
+                    include_dirs=['amazon/ion', '/usr/local/include/ionc', '/usr/local/include/decNumber', '/usr/local/include'],
+                    libraries=['ionc', 'decNumber'],
+                    library_dirs=['/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc',
+                                  '/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber'],
+                    extra_link_args=['-Wl,-rpath,/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc/'],
+                ),
+            ],
+        )
+    else:
+        kw = dict()
 
-    packages=find_packages(exclude=['tests*']),
-    namespace_packages=['amazon'],
+    setup(
+        name='amazon.ion',
+        version='0.7.0',
+        description='A Python implementation of Amazon Ion.',
+        url='http://github.com/amzn/ion-python',
+        author='Amazon Ion Team',
+        author_email='ion-team@amazon.com',
+        license='Apache License 2.0',
 
-    install_requires=[
-        'six',
-    ],
+        packages=find_packages(exclude=['tests*']),
+        namespace_packages=['amazon'],
 
-    setup_requires=[
-        'pytest-runner',
-    ],
+        install_requires=[
+            'six',
+        ],
 
-    tests_require=[
-        'pytest',
-    ],
-)
+        setup_requires=[
+            'pytest-runner',
+        ],
+
+        tests_require=[
+            'pytest',
+        ],
+        **kw
+    )
+
+
+c_ext = True
+run_setup(c_ext)
