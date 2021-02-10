@@ -14,6 +14,7 @@
 
 #define ERR_MSG_MAX_LEN 100
 #define FIELD_NAME_MAX_LEN 100
+#define DEC_NUMBER_MAX_LEN 300
 
 static char _err_msg[ERR_MSG_MAX_LEN];
 
@@ -106,6 +107,10 @@ static PyObject* _exception_module;
 static PyObject* _ion_exception_cls;
 static decContext dec_context;
 
+static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp);
+static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value);
+static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values);
+
 static int ion_type_from_py(PyObject* obj) {
     PyObject* ion_type = NULL;
     if (PyObject_HasAttrString(obj, "ion_type")) {
@@ -131,12 +136,8 @@ static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
     if (!utf8_str) {
         return; // TODO raise error
     }
-    //*out = PyUnicode_AS_DATA(utf8_str);
-    //*len_out = PyUnicode_GET_DATA_SIZE(utf8_str);
     PyString_AsStringAndSize(utf8_str, out, len_out);
     Py_DECREF(utf8_str);
-    // NOTE: This returns a string in the default encoding, which should be UTF8.
-    //PyString_AsStringAndSize(str, out, len_out);
 #endif
 }
 
@@ -189,7 +190,6 @@ static iERR ionc_write_annotations(hWRITER writer, PyObject* obj) {
     Py_ssize_t len = PySequence_Size(annotations);
     Py_ssize_t i;
     for (i = 0; i < len; i++) {
-        // TODO handle SymbolTokens as well as text
         PyObject* pyAnnotation = PySequence_Fast_GET_ITEM(annotations, i);
         Py_INCREF(pyAnnotation);
         if (PyUnicode_Check(pyAnnotation)) {
@@ -203,12 +203,11 @@ static iERR ionc_write_annotations(hWRITER writer, PyObject* obj) {
         Py_DECREF(pyAnnotation);
         if (err) break;
     }
+    Py_XDECREF(annotations);
 fail:
     Py_XDECREF(annotations);
     cRETURN;
 }
-
-static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp);
 
 static iERR ionc_write_sequence(hWRITER writer, PyObject* sequence, PyObject* tuple_as_sexp) {
     iENTER;
@@ -232,12 +231,11 @@ fail:
     cRETURN;
 }
 
-static iERR ionc_write_mapping(hWRITER writer, PyObject* map, PyObject* tuple_as_sexp) {
+static iERR ionc_write_struct(hWRITER writer, PyObject* map, PyObject* tuple_as_sexp) {
     iENTER;
     PyObject * list = PyMapping_Items(map);
-    //iterate list and write.
     PyObject * seq = PySequence_Fast(list, "expected a sequence within the map.");
-    PyObject *key = NULL, *val = NULL, *child_obj = NULL;
+    PyObject * key = NULL, *val = NULL, *child_obj = NULL;
     Py_ssize_t len = PySequence_Size(seq);
     Py_ssize_t i;
     for (i = 0; i < len; i++) {
@@ -252,20 +250,10 @@ static iERR ionc_write_mapping(hWRITER writer, PyObject* map, PyObject* tuple_as
             ION_STRING field_name;
             ion_string_from_py(key, &field_name);
             IONCHECK(ion_writer_write_field_name(writer, &field_name));
-        } else if (PyObject_TypeCheck(key, (PyTypeObject*)_py_symboltoken_constructor)) {
-            PyObject* symbol_text = PyObject_GetAttrString(key, "text");
-            if (symbol_text == Py_None) {
-                PyObject* py_sid = PyObject_GetAttrString(key, "sid");
-                SID sid = PyInt_AsSsize_t(py_sid);
-                err = _ion_writer_write_symbol_id_helper(writer, sid);
-                Py_DECREF(py_sid);
-            } else {
-                ION_STRING string_value;
-                ion_string_from_py(symbol_text, &string_value);
-                err = ion_writer_write_field_name(writer, &string_value);
-            }
-            Py_DECREF(symbol_text);
-            IONCHECK(err);
+        }
+        else if (key == Py_None) {
+            // if field_name is None, write symbol $0 instead.
+            IONCHECK(_ion_writer_write_field_sid_helper(writer, 0));
         }
 
         IONCHECK(Py_EnterRecursiveCall(" while writing an Ion struct"));
@@ -286,14 +274,13 @@ fail:
     cRETURN;
 }
 
-
 static iERR ionc_write_big_int(hWRITER writer, PyObject *obj) {
     iENTER;
     PyObject* int_str = PyObject_CallMethod(obj, "__str__", NULL);
-//    PyObject *int_str = PyString_FromFormat("%ld", PyInt_AsLong(obj)); _PyInt_AsLong()
     ION_STRING string_value;
     ion_string_from_py(int_str, &string_value);
     ION_INT ion_int_value;
+
     IONCHECK(ion_int_init(&ion_int_value, NULL));
     IONCHECK(ion_int_from_string(&ion_int_value, &string_value));
     IONCHECK(ion_writer_write_ion_int(writer, &ion_int_value));
@@ -312,6 +299,7 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
     int ion_type = ion_type_from_py(obj);
 
     IONCHECK(ionc_write_annotations(writer, obj));
+
     if (PyUnicode_Check(obj)) {
         if (ion_type == tid_none_INT) {
             ion_type = tid_STRING_INT;
@@ -383,9 +371,11 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
         char* decimal_c_str = NULL;
         Py_ssize_t decimal_c_str_len;
         c_string_from_py(decimal_str, &decimal_c_str, &decimal_c_str_len);
+
         ION_DECIMAL decimal_value;
         ion_decimal_from_string(&decimal_value, decimal_c_str, &dec_context);
         Py_DECREF(decimal_str);
+
         IONCHECK(ion_writer_write_ion_decimal(writer, &decimal_value));
     }
     else if (PyBytes_Check(obj)) {
@@ -501,7 +491,7 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
             _FAILWITHMSG(IERR_INVALID_ARG, "Found dict; expected STRUCT Ion type.");
         }
         IONCHECK(ion_writer_start_container(writer, (ION_TYPE)ion_type));
-        IONCHECK(ionc_write_mapping(writer, obj, tuple_as_sexp));
+        IONCHECK(ionc_write_struct(writer, obj, tuple_as_sexp));
         IONCHECK(ion_writer_finish_container(writer));
     }
     else if (PyObject_TypeCheck(obj, (PyTypeObject*)_py_symboltoken_constructor)) {
@@ -532,11 +522,8 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
     else {
         _FAILWITHMSG(IERR_INVALID_STATE, "Cannot dump arbitrary object types.");
     }
-    // TODO all other types, else error
     iRETURN;
 }
-
-
 
 int _ionc_write(PyObject* obj, PyObject* binary, ION_STREAM* ion_stream, PyObject* tuple_as_sexp) {
     iENTER;
@@ -544,12 +531,10 @@ int _ionc_write(PyObject* obj, PyObject* binary, ION_STREAM* ion_stream, PyObjec
     ION_WRITER_OPTIONS options;
     memset(&options, 0, sizeof(options));
     options.output_as_binary = PyObject_IsTrue(binary);
-//    options.escape_all_non_ascii = TRUE; // otherwise, text strings/symbols will be written as UTF-8.
 
     IONCHECK(ion_writer_open(&writer, ion_stream, &options));
     IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
     IONCHECK(ion_writer_close(writer));
-    //IONCHECK(ion_stream_close(ion_stream)); // callers must close stream themselves
     iRETURN;
 }
 
@@ -568,6 +553,7 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
     Py_INCREF(binary);
     Py_INCREF(sequence_as_stream);
     IONCHECK(ion_stream_open_memory_only(&ion_stream));
+
     if (sequence_as_stream == Py_True && (PyList_Check(obj) || PyTuple_Check(obj))) {
         PyObject* objs = PySequence_Fast(obj, "expected sequence");
         Py_ssize_t len = PySequence_Size(objs);
@@ -621,10 +607,6 @@ fail:
     return exception;
 }
 
-static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value);
-
-static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values);
-
 iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL emit_bare_values) {
     iENTER;
     ION_TYPE t;
@@ -661,7 +643,7 @@ static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL
     else {
         PyList_Append(pyContainer, (PyObject*)element);
     }
-    Py_XDECREF(element);  // TODO Not sure about this DECREF. Check
+    Py_XDECREF(element);
 }
 
 PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
@@ -693,7 +675,7 @@ PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
             _FAILWITHMSG(IERR_INVALID_ARG, "Single_value option specified; expected a single value.")
         }
         PyObject* value = PyList_GetItem(top_level_container, 0);
-        Py_XINCREF(value); // TODO value is a borrowed reference. Is it correct to INCREF it here before returning?
+        Py_XINCREF(value);
         Py_DECREF(top_level_container);
         return value;
     }
@@ -806,7 +788,6 @@ static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
         py_string_value = Py_None;
         py_sid = PyLong_FromLong(0);
     }
-
     return PyObject_CallFunctionObjArgs(
         _py_symboltoken_constructor,
         py_string_value,
@@ -815,7 +796,7 @@ static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
     );
 }
 
-
+//ion spec uses 'd' in a decimal number while python decimal object only accepts 'e'.
 static iERR c_decstr_to_py_decstr(char* dec_str) {
     for (int i = 0; i < strlen(dec_str); i++) {
         if (dec_str[i] == 'd' || dec_str[i] == 'D') {
@@ -885,7 +866,7 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
             else {
                 null_type = tid_SYMBOL_INT;
             }
-//            IONCHECK(ion_reader_read_null(hreader, &null_type));
+
             ion_type = ION_TYPE_INT(null_type);
             py_value = Py_BuildValue(""); // INCREFs and returns Python None.
             emit_bare_values = emit_bare_values && (ion_type == tid_NULL_INT);
@@ -902,33 +883,25 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
         }
         case tid_INT_INT:
         {
-            //int64_t ion_int64;
-            //err = ion_reader_read_int64(hreader, &ion_int64);
-            //if (err == IERR_NUMERIC_OVERFLOW) {
-            //    err = 0;
-                // TODO add ion-c API to return an int64 if possible, or an ION_INT if necessary
-                ION_INT ion_int_value;
-                IONCHECK(ion_int_init(&ion_int_value, hreader));
-                IONCHECK(ion_reader_read_ion_int(hreader, &ion_int_value));
-                SIZE int_char_len, int_char_written;
-                IONCHECK(ion_int_char_length(&ion_int_value, &int_char_len));
-                char* ion_int_str = (char*)PyMem_Malloc(int_char_len + 1); // Leave room for \0
-                err = ion_int_to_char(&ion_int_value, (BYTE*)ion_int_str, int_char_len, &int_char_written);
-                if (err) {
-                    PyMem_Free(ion_int_str);
-                    IONCHECK(err);
-                }
-                if (int_char_len < int_char_written) {
-                    PyMem_Free(ion_int_str);
-                    _FAILWITHMSG(IERR_BUFFER_TOO_SMALL, "Not enough space given to represent int as string.");
-                }
-                py_value = PyLong_FromString(ion_int_str, NULL, 10);
+            // TODO add ion-c API to return an int64 if possible, or an ION_INT if necessary
+            ION_INT ion_int_value;
+            IONCHECK(ion_int_init(&ion_int_value, hreader));
+            IONCHECK(ion_reader_read_ion_int(hreader, &ion_int_value));
+            SIZE int_char_len, int_char_written;
+            IONCHECK(ion_int_char_length(&ion_int_value, &int_char_len));
+            char* ion_int_str = (char*)PyMem_Malloc(int_char_len + 1); // Leave room for \0
+            err = ion_int_to_char(&ion_int_value, (BYTE*)ion_int_str, int_char_len, &int_char_written);
+            if (err) {
                 PyMem_Free(ion_int_str);
-            //}
-            //else {
-            //    IONCHECK(err);
-            //    py_value = Py_BuildValue("l", ion_int64);
-            //}
+                IONCHECK(err);
+            }
+            if (int_char_len < int_char_written) {
+                PyMem_Free(ion_int_str);
+                _FAILWITHMSG(IERR_BUFFER_TOO_SMALL, "Not enough space given to represent int as string.");
+            }
+            py_value = PyLong_FromString(ion_int_str, NULL, 10);
+            PyMem_Free(ion_int_str);
+
             ion_nature_constructor = _ionpyint_fromvalue;
             break;
         }
@@ -942,17 +915,10 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
         }
         case tid_DECIMAL_INT:
         {
-//            decQuad decimal_value;
-//            IONCHECK(ion_reader_read_decimal(hreader, &decimal_value));
-//            // TODO the max length must be retrieved from somewhere authoritative, or a different technique must be used.
-//            char dec_str[DECQUAD_String]; // TODO changed this to DECQUAD_String without testing. CHECK
-//            py_value = PyObject_CallFunction(_decimal_constructor, "s", decQuadToString(&decimal_value, dec_str));
-//            ion_nature_constructor = _ionpydecimal_fromvalue;
-
             ION_DECIMAL decimal_value;
             IONCHECK(ion_reader_read_ion_decimal(hreader, &decimal_value));
             // TODO the max length must be retrieved from somewhere authoritative, or a different technique must be used.
-            char dec_str[300]; // TODO changed this to DECQUAD_String without testing. CHECK
+            char dec_str[DEC_NUMBER_MAX_LEN]; // DECQUAD_String is only 43, which fails some tests.
             ion_decimal_to_string(&decimal_value, dec_str);
             c_decstr_to_py_decstr(&dec_str);
             py_value = PyObject_CallFunction(_decimal_constructor, "s", dec_str);
@@ -1178,7 +1144,7 @@ PyObject* ionc_init_module(void) {
     _ion_exception_cls  = PyObject_GetAttrString(_exception_module, "IonException");
 
     decContextDefault(&dec_context, DEC_INIT_DECQUAD);  // TODO The writer already has one of these, but it's private...
-    dec_context.digits=300;
+    dec_context.digits=DEC_NUMBER_MAX_LEN;
     return m;
 }
 
