@@ -525,13 +525,8 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
     iRETURN;
 }
 
-int _ionc_write(PyObject* obj, PyObject* binary, ION_STREAM* ion_stream, PyObject* tuple_as_sexp) {
+int _ionc_write(PyObject* obj, PyObject* binary, ION_STREAM* ion_stream, PyObject* tuple_as_sexp, hWRITER writer, ION_WRITER_OPTIONS options) {
     iENTER;
-    hWRITER writer;
-    ION_WRITER_OPTIONS options;
-    memset(&options, 0, sizeof(options));
-    options.output_as_binary = PyObject_IsTrue(binary);
-
     IONCHECK(ion_writer_open(&writer, ion_stream, &options));
     IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
     IONCHECK(ion_writer_close(writer));
@@ -554,6 +549,12 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
     Py_INCREF(sequence_as_stream);
     IONCHECK(ion_stream_open_memory_only(&ion_stream));
 
+    //Create writer here to avoid re-create writer for each element when sequence_as_stream is True.
+    hWRITER writer;
+    ION_WRITER_OPTIONS options;
+    memset(&options, 0, sizeof(options));
+    options.output_as_binary = PyObject_IsTrue(binary);
+
     if (sequence_as_stream == Py_True && (PyList_Check(obj) || PyTuple_Check(obj))) {
         PyObject* objs = PySequence_Fast(obj, "expected sequence");
         Py_ssize_t len = PySequence_Size(objs);
@@ -561,8 +562,9 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
         for (i = 0; i < len; i++) {
             PyObject* pyObj = PySequence_Fast_GET_ITEM(objs, i);
             Py_INCREF(pyObj);
-            // TODO wait a second... this creates a new writer for every element. It should not do that.
-            err = _ionc_write(pyObj, binary, ion_stream, tuple_as_sexp);
+
+            err = _ionc_write(pyObj, binary, ion_stream, tuple_as_sexp, writer, options);
+
             Py_DECREF(pyObj);
             if (err) break;
         }
@@ -570,8 +572,9 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
         IONCHECK(err);
     }
     else {
-        IONCHECK(_ionc_write(obj, binary, ion_stream, tuple_as_sexp));
+        IONCHECK(_ionc_write(obj, binary, ion_stream, tuple_as_sexp, writer, options));
     }
+
     POSITION len = ion_stream_get_position(ion_stream);
     IONCHECK(ion_stream_seek(ion_stream, 0));
     // TODO if len > max int32, need to return more than one page...
