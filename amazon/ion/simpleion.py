@@ -26,7 +26,7 @@ from itertools import chain
 
 import six
 
-import ionc
+import amazon.ion.ionc as ionc
 from amazon.ion.reader_text import text_reader
 from amazon.ion.writer_text import text_writer
 from .core import IonEvent, IonEventType, IonType, ION_STREAM_END_EVENT, Timestamp, ION_VERSION_MARKER_EVENT

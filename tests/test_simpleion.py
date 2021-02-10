@@ -543,31 +543,33 @@ def test_unknown_object_type_fails(is_binary):
 class PrettyPrintParams(record('ion_text', 'indent', ('exact_text', None), ('regexes', []))):
     pass
 
-# @parametrize(
-#         PrettyPrintParams(ion_text='a', indent='  ', exact_text="$ion_1_0\na"),
-#         PrettyPrintParams(ion_text='"a"', indent='  ', exact_text="$ion_1_0\n\"a\""),
-#         PrettyPrintParams(ion_text='\'$a__9\'', indent='  ', exact_text="$ion_1_0\n$a__9"),
-#         PrettyPrintParams(ion_text='\'$a_\\\'_9\'', indent='  ', exact_text="$ion_1_0\n\'$a_\\\'_9\'"),
-#         PrettyPrintParams(ion_text='[a, b, chair::2008-08-08T]', indent='  ',
-#             exact_text="$ion_1_0\n[\n  a,\n  b,\n  chair::2008-08-08T\n]"),
-#         PrettyPrintParams(ion_text='[a, b, chair::2008-08-08T]', indent=None, # not pretty print
-#             exact_text="$ion_1_0 [a,b,chair::2008-08-08T]"),
-#         PrettyPrintParams(ion_text='[apple, {roof: false}]', indent='\t',
-#             exact_text="$ion_1_0\n[\n\tapple,\n\t{\n\t\troof: false\n\t}\n]"),
-#         PrettyPrintParams(ion_text='[apple, "banana", {roof: false}]', indent='\t',
-#             exact_text="$ion_1_0\n[\n\tapple,\n\t\"banana\",\n\t{\n\t\troof: false\n\t}\n]"),
-#         PrettyPrintParams(ion_text='[apple, {roof: false, walls:4, door: wood::large::true}]', indent='\t',
-#             regexes=["\\A\\$ion_1_0\n\\[\n\tapple,\n\t\\{", "\n\t\tdoor: wood::large::true,?\n",
-#                 "\n\t\troof: false,?\n", "\n\t\twalls: 4,?\n", "\n\t\\}\n\\]\\Z"])
-#         )
-# def test_pretty_print(p):
-#     ion_text, indent, exact_text, regexes = p
-#     ion_value = loads(ion_text)
-#     actual_pretty_ion_text = dumps(ion_value, binary=False, indent=indent)
-#     if exact_text is not None:
-#         assert actual_pretty_ion_text == exact_text
-#     for regex_str in regexes:
-#         assert re.search(regex_str, actual_pretty_ion_text, re.M) is not None
+@parametrize(
+        PrettyPrintParams(ion_text='a', indent='  ', exact_text="$ion_1_0\na"),
+        PrettyPrintParams(ion_text='"a"', indent='  ', exact_text="$ion_1_0\n\"a\""),
+        PrettyPrintParams(ion_text='\'$a__9\'', indent='  ', exact_text="$ion_1_0\n$a__9"),
+        PrettyPrintParams(ion_text='\'$a_\\\'_9\'', indent='  ', exact_text="$ion_1_0\n\'$a_\\\'_9\'"),
+        PrettyPrintParams(ion_text='[a, b, chair::2008-08-08T]', indent='  ',
+            exact_text="$ion_1_0\n[\n  a,\n  b,\n  chair::2008-08-08T\n]"),
+        PrettyPrintParams(ion_text='[a, b, chair::2008-08-08T]', indent=None, # not pretty print
+            exact_text="$ion_1_0 [a,b,chair::2008-08-08T]"),
+        PrettyPrintParams(ion_text='[apple, {roof: false}]', indent='\t',
+            exact_text="$ion_1_0\n[\n\tapple,\n\t{\n\t\troof: false\n\t}\n]"),
+        PrettyPrintParams(ion_text='[apple, "banana", {roof: false}]', indent='\t',
+            exact_text="$ion_1_0\n[\n\tapple,\n\t\"banana\",\n\t{\n\t\troof: false\n\t}\n]"),
+        PrettyPrintParams(ion_text='[apple, {roof: false, walls:4, door: wood::large::true}]', indent='\t',
+            regexes=["\\A\\$ion_1_0\n\\[\n\tapple,\n\t\\{", "\n\t\tdoor: wood::large::true,?\n",
+                "\n\t\troof: false,?\n", "\n\t\twalls: 4,?\n", "\n\t\\}\n\\]\\Z"])
+        )
+def test_pretty_print(p):
+    if c_ext:
+        return
+    ion_text, indent, exact_text, regexes = p
+    ion_value = loads(ion_text)
+    actual_pretty_ion_text = dumps(ion_value, binary=False, indent=indent)
+    if exact_text is not None:
+        assert actual_pretty_ion_text == exact_text
+    for regex_str in regexes:
+        assert re.search(regex_str, actual_pretty_ion_text, re.M) is not None
 
 
 # Regression test for issue #95
@@ -585,12 +587,14 @@ def test_struct_field():
     assert u'new_name' in struct_c
 
 
-# def test_dumps_omit_version_marker():
-#     v = loads('5')
-#     assert dumps(v, binary=False) == '$ion_1_0 5'
-#     assert dumps(v, binary=False, omit_version_marker=True) == '5'
-#
-#     # verify no impact on binary output
-#     assert dumps(v) == b'\xe0\x01\x00\xea\x21\x05'
-#     assert dumps(v, omit_version_marker=True) == b'\xe0\x01\x00\xea\x21\x05'
+def test_dumps_omit_version_marker():
+    if c_ext:
+        return
+    v = loads('5')
+    assert dumps(v, binary=False) == '$ion_1_0 5'
+    assert dumps(v, binary=False, omit_version_marker=True) == '5'
+
+    # verify no impact on binary output
+    assert dumps(v) == b'\xe0\x01\x00\xea\x21\x05'
+    assert dumps(v, omit_version_marker=True) == b'\xe0\x01\x00\xea\x21\x05'
 
