@@ -562,6 +562,7 @@ class PrettyPrintParams(record('ion_text', 'indent', ('exact_text', None), ('reg
         )
 def test_pretty_print(p):
     if c_ext:
+        # TODO Next relase: support pretty print for C extension.
         return
     ion_text, indent, exact_text, regexes = p
     ion_value = loads(ion_text)
@@ -588,8 +589,6 @@ def test_struct_field():
 
 
 def test_dumps_omit_version_marker():
-    if c_ext:
-        return
     v = loads('5')
     assert dumps(v, binary=False) == '$ion_1_0 5'
     assert dumps(v, binary=False, omit_version_marker=True) == '5'

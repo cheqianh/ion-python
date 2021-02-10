@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 from setuptools import setup, find_packages, Extension
+from amazon.ion.simpleion import c_ext
 
 
 def run_setup(c_ext):
@@ -65,5 +66,4 @@ def run_setup(c_ext):
     )
 
 
-c_ext = True
 run_setup(c_ext)

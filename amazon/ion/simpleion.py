@@ -463,6 +463,11 @@ def dump_extension(obj, fp, imports=None, binary=True, sequence_as_stream=False,
                 ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False, tuple_as_sexp=False,
                 omit_version_marker=False, **kw):
     res = ionc.ionc_write(obj, binary, sequence_as_stream, tuple_as_sexp)
+
+    # TODO Next relase: support omit_version_marker for C extension rather than hack here.
+    if not binary and not omit_version_marker:
+        res = b'$ion_1_0 ' + res
+
     fp.write(res)
 
 
