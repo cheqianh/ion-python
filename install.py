@@ -20,14 +20,14 @@ from __future__ import print_function
 import os
 import sys
 from subprocess import call, check_output, CalledProcessError, Popen, PIPE
-from os.path import isfile, join, abspath, split, isdir
+from os.path import isfile, join, abspath, split, isdir, dirname
 
 _PYPY = hasattr(sys, 'pypy_translation_info')
 
-_IONC_LOCATION = abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'ion-c', 'build', 'release'))
+_IONC_LOCATION = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'build', 'release'))
 _IONC_INCLUDES_LOCATIONS = {
-    'ionc': abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'ion-c', 'ionc', 'include', 'ionc')),
-    'decNumber': abspath(join(os.sep, 'Users', 'cheqianh', 'Desktop', 'ion-c', 'ion-c', 'decNumber', 'include', 'decNumber'))
+    'ionc': abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'ionc', 'include', 'ionc')),
+    'decNumber': abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'decNumber', 'include', 'decNumber'))
 }
 _USERLIB_LOCATION = abspath(join(os.sep, 'usr', 'local', 'lib'))
 _USERINCLUDE_LOCATION = abspath(join(os.sep, 'usr', 'local', 'include'))
@@ -56,6 +56,7 @@ def _link_includes(name):
 
 def _download_ionc():
     # TODO placeholder for downloading the dependencies.
+    # git submodule update --init --recursive
     pass
 
 

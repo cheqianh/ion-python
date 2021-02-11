@@ -1,3 +1,18 @@
+// Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at:
+//
+//    http://aws.amazon.com/apache2.0/
+//
+// or in the "license" file accompanying this file. This file is
+// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the
+// License.
+
+
 #include <Python.h>
 #include "datetime.h"
 #include "_ioncmodule.h"
@@ -134,7 +149,7 @@ static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
         utf8_str = PyString_AsEncodedObject(str, "utf-8", "strict");
     }
     if (!utf8_str) {
-        return; // TODO raise error
+        _FAILWITHMSG(IERR_INVALID_ARG, "Python 2 convert python string to utf8 string fail.");
     }
     PyString_AsStringAndSize(utf8_str, out, len_out);
     Py_DECREF(utf8_str);
@@ -530,7 +545,7 @@ int _ionc_write(PyObject* obj, PyObject* binary, ION_STREAM* ion_stream, PyObjec
     iENTER;
     IONCHECK(ion_writer_open(&writer, ion_stream, &options));
     IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
-    //TODO this is a hack for sequence_as_stream. e.g. before this hac "1 2 3" will write to "123" which needs to be supported in the future.
+    //TODO this is a hack for sequence_as_stream. e.g. before this hack dumps("1 2 3", sequence_as_stream=True) will write as "123" which needs to be supported in the future.
     if (sequence_as_stream == Py_True && binary != Py_True && !last_element) {
         IONCHECK(ion_stream_write_byte_no_checks(ion_stream, ' '));
     }
@@ -554,7 +569,7 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
     Py_INCREF(sequence_as_stream);
     IONCHECK(ion_stream_open_memory_only(&ion_stream));
 
-    //Create writer here to avoid re-create writer for each element when sequence_as_stream is True.
+    //Create a writer here to avoid re-create writer for each element when sequence_as_stream is True.
     hWRITER writer;
     ION_WRITER_OPTIONS options;
     memset(&options, 0, sizeof(options));
@@ -953,7 +968,6 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
             IONCHECK(ion_reader_read_string(hreader, &string_value));
             ion_nature_constructor = _ionpysymbol_fromvalue;
             py_value = ion_string_to_py_symboltoken(&string_value);
-            // intentional fall-through
             break;
         }
         case tid_STRING_INT:
