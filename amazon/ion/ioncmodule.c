@@ -237,6 +237,7 @@ static iERR ionc_write_sequence(hWRITER writer, PyObject* sequence, PyObject* tu
         err = ionc_write_value(writer, child_obj, tuple_as_sexp);
         Py_LeaveRecursiveCall();
         IONCHECK(err);
+
         Py_DECREF(child_obj);
         child_obj = NULL;
     }
@@ -283,8 +284,11 @@ static iERR ionc_write_struct(hWRITER writer, PyObject* map, PyObject* tuple_as_
         key = NULL;
         val = NULL;
     }
+    Py_XDECREF(list);
+    Py_XDECREF(seq);
 fail:
     Py_XDECREF(key);
+    Py_XDECREF(val);
     Py_XDECREF(child_obj);
     cRETURN;
 }
@@ -300,7 +304,7 @@ static iERR ionc_write_big_int(hWRITER writer, PyObject *obj) {
     IONCHECK(ion_int_from_string(&ion_int_value, &string_value));
     IONCHECK(ion_writer_write_ion_int(writer, &ion_int_value));
 fail:
-    Py_DECREF(int_str);
+    Py_XDECREF(int_str);
     cRETURN;
 }
 
@@ -545,7 +549,7 @@ int _ionc_write(PyObject* obj, PyObject* binary, ION_STREAM* ion_stream, PyObjec
     iENTER;
     IONCHECK(ion_writer_open(&writer, ion_stream, &options));
     IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
-    //TODO this is a hack for sequence_as_stream. e.g. before this hack dumps("1 2 3", sequence_as_stream=True) will write as "123" which needs to be supported in the future.
+    //TODO next_release this is a hack for sequence_as_stream. e.g. before this hack dumps("1 2 3", sequence_as_stream=True) will write as "123" which needs to be supported in the future.
     if (sequence_as_stream == Py_True && binary != Py_True && !last_element) {
         IONCHECK(ion_stream_write_byte_no_checks(ion_stream, ' '));
     }
@@ -567,6 +571,7 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
     Py_INCREF(obj);
     Py_INCREF(binary);
     Py_INCREF(sequence_as_stream);
+    Py_INCREF(tuple_as_sexp);
     IONCHECK(ion_stream_open_memory_only(&ion_stream));
 
     //Create a writer here to avoid re-create writer for each element when sequence_as_stream is True.
@@ -581,8 +586,8 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
         Py_ssize_t i;
         BOOL last_element = FALSE;
         for (i = 0; i < len; i++) {
-            //TODO used for hack sequence_as_stream in line 532.
-            if (i == len-1) {
+            //TODO next_release: used for hack sequence_as_stream in line 532.
+            if (i == len - 1) {
                 last_element = TRUE;
             }
 
@@ -619,12 +624,14 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
     Py_DECREF(obj);
     Py_DECREF(binary);
     Py_DECREF(sequence_as_stream);
+    Py_DECREF(tuple_as_sexp);
     return written;
 fail:
     PyMem_Free(buf);
     Py_DECREF(obj);
     Py_DECREF(binary);
     Py_DECREF(sequence_as_stream);
+    Py_DECREF(tuple_as_sexp);
     PyObject* exception = NULL;
     if (err == IERR_INVALID_STATE) {
         exception = PyErr_Format(PyExc_TypeError, "%s", _err_msg);
@@ -709,6 +716,9 @@ PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
         Py_DECREF(top_level_container);
         return value;
     }
+
+    Py_XDECREF(single_value);
+    Py_XDECREF(emit_bare_values);
     return top_level_container;
 fail:
     Py_XDECREF(top_level_container); // TODO need to DECREF all of its children too?
@@ -861,7 +871,6 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
 
     IONCHECK(ion_reader_get_annotation_count(hreader, &annotation_count));
     if (annotation_count > 0) {
-
         emit_bare_values = FALSE;
         // TODO for speed, could have a max number of annotations allowed, then reuse a static array.
         ION_STRING* annotations = (ION_STRING*)PyMem_Malloc(annotation_count * sizeof(ION_STRING));
@@ -1053,6 +1062,7 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
         ion_string_assign_cstr(&field_name, field_name_value, field_name_len);
     }
     ionc_add_to_container(container, py_value, in_struct, &field_name);
+
 fail:
     if (err) {
         Py_XDECREF(py_annotations);
