@@ -55,8 +55,10 @@ def _link_includes(name):
 
 
 def _download_ionc():
-    # TODO placeholder for downloading the dependencies.
-    # git submodule update --init --recursive
+    # TODO download: git submodule update --init --recursive
+
+    # TODO build
+
     pass
 
 

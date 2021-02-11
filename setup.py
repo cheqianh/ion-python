@@ -17,7 +17,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+from os.path import abspath, join, dirname
+
 from setuptools import setup, find_packages, Extension
+
+run_time_path = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'build', 'release', 'ionc')),
 
 
 def run_setup(c_ext):
@@ -27,11 +32,11 @@ def run_setup(c_ext):
                 Extension(
                     'amazon.ion.ionc',
                     sources=['amazon/ion/ioncmodule.c'],
-                    include_dirs=['amazon/ion', '/usr/local/include/ionc', '/usr/local/include/decNumber', '/usr/local/include'],
+                    include_dirs=['amazon/ion', 'ion-c/ionc/include/ionc', 'ion-c/ionc/include',
+                                  'ion-c/decNumber/include/decNumber', 'ion-c/decNumber/include'],
                     libraries=['ionc', 'decNumber'],
-                    library_dirs=['/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc',
-                                  '/Users/cheqianh/Desktop/ion-c/ion-c/build/release/decNumber'],
-                    extra_link_args=['-Wl,-rpath,/Users/cheqianh/Desktop/ion-c/ion-c/build/release/ionc/'],
+                    library_dirs=['ion-c/build/release/ionc', 'ion-c/build/release/decNumber'],
+                    extra_link_args=['-Wl,-rpath,' + run_time_path[0]],
                 ),
             ],
         )
