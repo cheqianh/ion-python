@@ -640,7 +640,7 @@ fail:
         exception = PyErr_Format(_ion_exception_cls, "%s %s", ion_error_to_str(err), _err_msg);
     }
 
-    _err_msg[0] = '\0'; // TODO This is meant to make sure the error message isn't reused. Test.
+    _err_msg[0] = '\0';
     return exception;
 }
 
@@ -649,9 +649,8 @@ iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL em
     ION_TYPE t;
     for (;;) {
         IONCHECK(ion_reader_next(hreader, &t));
+        printf("type is: %d.\n", t);
         if (t == tid_EOF) {
-            // TODO IONC-4 does next() return tid_EOF or tid_none at end of stream?
-            // See ion_parser_next where it returns tid_none
             assert(t == tid_EOF && "next() at end");
             break;
         }
@@ -721,9 +720,9 @@ PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
     Py_XDECREF(emit_bare_values);
     return top_level_container;
 fail:
-    Py_XDECREF(top_level_container); // TODO need to DECREF all of its children too?
+    Py_XDECREF(top_level_container);
     PyObject* exception = PyErr_Format(_ion_exception_cls, "%s %s", ion_error_to_str(err), _err_msg);
-    _err_msg[0] = '\0'; // TODO This is meant to make sure the error message isn't reused. Test.
+    _err_msg[0] = '\0';
     return exception;
 }
 
@@ -1096,20 +1095,18 @@ static struct PyModuleDef moduledef = {
 
 PyObject* ionc_init_module(void) {
     PyDateTime_IMPORT;
-
     PyObject* m;
+
 #if PY_MAJOR_VERSION >= 3
     m = PyModule_Create(&moduledef);
 #else
-    m = Py_InitModule3("ionc", ioncmodule_funcs,
-                   "Extension module example!");
+    m = Py_InitModule3("ionc", ioncmodule_funcs,"Extension module example!");
 #endif
+
     // TODO is there a destructor for modules? These should be decreffed there
-
     _decimal_module             = PyImport_ImportModule("decimal");
-    _decimal_constructor        = PyObject_GetAttrString(_decimal_module, "Decimal");  // TODO or use PyInstance_New?
+    _decimal_constructor        = PyObject_GetAttrString(_decimal_module, "Decimal");
     _simpletypes_module         = PyImport_ImportModule("amazon.ion.simple_types");
-
 
     _ionpynull_cls              = PyObject_GetAttrString(_simpletypes_module, "IonPyNull");
     _ionpynull_fromvalue        = PyObject_GetAttrString(_ionpynull_cls, "from_value");
@@ -1182,7 +1179,7 @@ PyObject* ionc_init_module(void) {
     _exception_module   = PyImport_ImportModule("amazon.ion.exceptions");
     _ion_exception_cls  = PyObject_GetAttrString(_exception_module, "IonException");
 
-    decContextDefault(&dec_context, DEC_INIT_DECQUAD);  // TODO The writer already has one of these, but it's private...
+    decContextDefault(&dec_context, DEC_INIT_DECQUAD);  //The writer already had one of these, but it's private.
     dec_context.digits=DEC_NUMBER_MAX_LEN;
     return m;
 }
