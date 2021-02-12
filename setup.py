@@ -22,8 +22,6 @@ from os.path import abspath, join, dirname
 
 from setuptools import setup, find_packages, Extension
 
-run_time_path = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'build', 'release', 'ionc')),
-
 
 def run_setup(c_ext):
     if c_ext:
@@ -36,7 +34,7 @@ def run_setup(c_ext):
                                   'ion-c/decNumber/include/decNumber', 'ion-c/decNumber/include'],
                     libraries=['ionc', 'decNumber'],
                     library_dirs=['ion-c/build/release/ionc', 'ion-c/build/release/decNumber'],
-                    extra_link_args=['-Wl,-rpath,' + run_time_path[0]],
+                    extra_link_args=['-Wl,-rpath,ion-c/build/release/ionc'],
                 ),
             ],
         )

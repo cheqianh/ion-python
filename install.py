@@ -55,12 +55,11 @@ def _link_includes(name):
 
 
 def _download_ionc():
-    # TODO download: git submodule update --init --recursive
+    # Install ion-c
     call(['git', 'submodule', 'update', '--init', '--recursive'])
-    # TODO build
+    # Build
     os.chdir('ion-c/')
     call(['./build-release.sh'])
-    pass
 
 
 def _install_ionc():
