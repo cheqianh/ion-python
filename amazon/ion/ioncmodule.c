@@ -649,7 +649,6 @@ iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL em
     ION_TYPE t;
     for (;;) {
         IONCHECK(ion_reader_next(hreader, &t));
-        printf("type is: %d.\n", t);
         if (t == tid_EOF) {
             assert(t == tid_EOF && "next() at end");
             break;
