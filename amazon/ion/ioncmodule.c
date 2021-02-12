@@ -715,8 +715,6 @@ PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
         return value;
     }
 
-    Py_XDECREF(single_value);
-    Py_XDECREF(emit_bare_values);
     return top_level_container;
 fail:
     Py_XDECREF(top_level_container);
