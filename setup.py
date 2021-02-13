@@ -17,14 +17,19 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
-from os.path import abspath, join, dirname
-
 from setuptools import setup, find_packages, Extension
+
+from install import _install_ionc
+
+# I/O for C extension.
+c_ext = 1
 
 
 def run_setup(c_ext):
     if c_ext:
+        # init and build ion-c module for C extension.
+        _install_ionc()
+
         kw = dict(
             ext_modules=[
                 Extension(
@@ -67,5 +72,6 @@ def run_setup(c_ext):
         **kw
     )
 
-c_ext = 1
+
 run_setup(c_ext)
+

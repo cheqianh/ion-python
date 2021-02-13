@@ -451,7 +451,7 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
                 decQuad tmp;
                 decQuadScaleB(&fraction, &fraction, decQuadFromInt32(&tmp, -MICROSECOND_DIGITS), &dec_context);
                 decQuadToNumber(&fraction, &helper);
-                decContextClearStatus(&dec_context, DEC_Inexact); // TODO consider saving, clearing, and resetting the status flag
+                decContextClearStatus(&dec_context, DEC_Inexact);
                 decNumberRescale(&helper, &helper, decNumberFromInt32(&dec_number_precision, -fractional_precision), &dec_context);
                 if (decContextTestStatus(&dec_context, DEC_Inexact)) {
                     // This means the fractional component is not [0, 1) or has more than microsecond precision.
@@ -789,7 +789,6 @@ static iERR ionc_read_timestamp(hREADER hreader, PyObject** timestamp_out) {
             if (decContextTestStatus(&dec_context, DEC_Inexact)) {
                 // This means the fractional component is not [0, 1) or has more than microsecond precision.
                 decContextClearStatus(&dec_context, DEC_Inexact);
-//                _FAILWITHMSG(IERR_INVALID_TIMESTAMP, "Timestamp fractional seconds must be in [0,1).");
             }
             PyDict_SetItemString(timestamp_args, "fractional_precision", PyInt_FromLong(fractional_precision));
             PyDict_SetItemString(timestamp_args, "microsecond", PyInt_FromLong(microsecond));
@@ -868,7 +867,6 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
     IONCHECK(ion_reader_get_annotation_count(hreader, &annotation_count));
     if (annotation_count > 0) {
         emit_bare_values = FALSE;
-        // TODO for speed, could have a max number of annotations allowed, then reuse a static array.
         ION_STRING* annotations = (ION_STRING*)PyMem_Malloc(annotation_count * sizeof(ION_STRING));
         err = ion_reader_get_annotations(hreader, annotations, annotation_count, &annotation_count);
         if (err) {
@@ -952,7 +950,6 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
         {
             ION_DECIMAL decimal_value;
             IONCHECK(ion_reader_read_ion_decimal(hreader, &decimal_value));
-            // TODO the max length must be retrieved from somewhere authoritative, or a different technique must be used.
             char dec_str[DEC_NUMBER_MAX_LEN]; // DECQUAD_String is only 43, which fails some tests.
             ion_decimal_to_string(&decimal_value, dec_str);
             c_decstr_to_py_decstr(&dec_str);

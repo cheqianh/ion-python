@@ -60,6 +60,7 @@ def _download_ionc():
     # Build
     os.chdir('ion-c/')
     call(['./build-release.sh'])
+    os.chdir('../')
 
 
 def _install_ionc():

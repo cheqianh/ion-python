@@ -26,7 +26,6 @@ from itertools import chain
 
 import six
 
-import amazon.ion.ionc as ionc
 from amazon.ion.reader_text import text_reader
 from amazon.ion.writer_text import text_writer
 from .core import IonEvent, IonEventType, IonType, ION_STREAM_END_EVENT, Timestamp, ION_VERSION_MARKER_EVENT
@@ -39,6 +38,14 @@ from .simple_types import IonPyList, IonPyDict, IonPyNull, IonPyBool, IonPyInt, 
 from .symbols import SymbolToken
 from .writer import blocking_writer
 from .writer_binary import binary_writer
+
+# Using C extension as default, and original python implementation if C extension doesn't exist.
+c_ext = True
+try:
+    import amazon.ion.ionc as ionc
+except ModuleNotFoundError:
+    c_ext = False
+
 
 
 _ION_CONTAINER_END_EVENT = IonEvent(IonEventType.CONTAINER_END)
@@ -462,6 +469,7 @@ def dump_extension(obj, fp, imports=None, binary=True, sequence_as_stream=False,
                 tuple_as_array=True, bigint_as_string=False, sort_keys=False, item_sort_key=None, for_json=None,
                 ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False, tuple_as_sexp=False,
                 omit_version_marker=False, **kw):
+
     res = ionc.ionc_write(obj, binary, sequence_as_stream, tuple_as_sexp)
 
     # TODO next_release: support "omit_version_marker" rather than hacking.
@@ -474,11 +482,11 @@ def dump_extension(obj, fp, imports=None, binary=True, sequence_as_stream=False,
 
 def load_extension(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
                     parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
+
     data = fp.read()
     data = data if isinstance(data, bytes) else bytes(data, encoding)
     return ionc.ionc_read(data, single_value, False)
 
 
-c_ext = 1
 dump = dump_extension if c_ext else dump
 load = load_extension if c_ext else load
