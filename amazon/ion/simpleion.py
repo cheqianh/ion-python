@@ -46,8 +46,6 @@ try:
 except ModuleNotFoundError:
     c_ext = False
 
-
-
 _ION_CONTAINER_END_EVENT = IonEvent(IonEventType.CONTAINER_END)
 _IVM = b'\xe0\x01\x00\xea'
 _TEXT_TYPES = (TextIOBase, six.StringIO)
@@ -477,7 +475,6 @@ def dump_extension(obj, fp, imports=None, binary=True, sequence_as_stream=False,
         res = b'$ion_1_0 ' + res
 
     fp.write(res)
-
 
 
 def load_extension(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,

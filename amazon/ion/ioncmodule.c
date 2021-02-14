@@ -149,7 +149,7 @@ static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
         utf8_str = PyString_AsEncodedObject(str, "utf-8", "strict");
     }
     if (!utf8_str) {
-        _FAILWITHMSG(IERR_INVALID_ARG, "Python 2 convert python string to utf8 string fail.");
+        _FAILWITHMSG(IERR_INVALID_ARG, "Python 2 fails to convert python string to utf8 string.");
     }
     PyString_AsStringAndSize(utf8_str, out, len_out);
     Py_DECREF(utf8_str);
@@ -451,7 +451,7 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
                 decQuad tmp;
                 decQuadScaleB(&fraction, &fraction, decQuadFromInt32(&tmp, -MICROSECOND_DIGITS), &dec_context);
                 decQuadToNumber(&fraction, &helper);
-                decContextClearStatus(&dec_context, DEC_Inexact);
+                decContextClearStatus(&dec_context, DEC_Inexact); // TODO consider saving, clearing, and resetting the status flag
                 decNumberRescale(&helper, &helper, decNumberFromInt32(&dec_number_precision, -fractional_precision), &dec_context);
                 if (decContextTestStatus(&dec_context, DEC_Inexact)) {
                     // This means the fractional component is not [0, 1) or has more than microsecond precision.
