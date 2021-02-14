@@ -547,13 +547,11 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
 int _ionc_write(PyObject* obj, PyObject* binary, ION_STREAM* ion_stream, PyObject* tuple_as_sexp, hWRITER writer,
                 ION_WRITER_OPTIONS options, PyObject* sequence_as_stream, BOOL last_element) {
     iENTER;
-    IONCHECK(ion_writer_open(&writer, ion_stream, &options));
     IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
     //TODO next_release this is a hack for sequence_as_stream. e.g. before this hack dumps("1 2 3", sequence_as_stream=True) will write as "123" which needs to be supported in the future.
     if (sequence_as_stream == Py_True && binary != Py_True && !last_element) {
         IONCHECK(ion_stream_write_byte_no_checks(ion_stream, ' '));
     }
-    IONCHECK(ion_writer_close(writer));
     iRETURN;
 }
 
@@ -579,6 +577,7 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
     ION_WRITER_OPTIONS options;
     memset(&options, 0, sizeof(options));
     options.output_as_binary = PyObject_IsTrue(binary);
+    IONCHECK(ion_writer_open(&writer, ion_stream, &options));
 
     if (sequence_as_stream == Py_True && (PyList_Check(obj) || PyTuple_Check(obj))) {
         PyObject* objs = PySequence_Fast(obj, "expected sequence");
@@ -593,7 +592,6 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
 
             PyObject* pyObj = PySequence_Fast_GET_ITEM(objs, i);
             Py_INCREF(pyObj);
-
             err = _ionc_write(pyObj, binary, ion_stream, tuple_as_sexp, writer, options, sequence_as_stream, last_element);
 
             Py_DECREF(pyObj);
@@ -606,6 +604,8 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
     else {
         IONCHECK(_ionc_write(obj, binary, ion_stream, tuple_as_sexp, writer, options, sequence_as_stream, FALSE));
     }
+    IONCHECK(ion_writer_close(writer));
+
 
     POSITION len = ion_stream_get_position(ion_stream);
     IONCHECK(ion_stream_seek(ion_stream, 0));
