@@ -149,7 +149,7 @@ def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=
         **kw: NOT IMPLEMENTED
 
     """
-    if c_ext and imports is not None:
+    if c_ext and imports is None:
         dump_extension(obj, fp, binary=binary, sequence_as_stream=sequence_as_stream, encoding='utf-8',
                        tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, **kw)
     else:
@@ -363,7 +363,7 @@ def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object
         else:
             A sequence of Python objects representing a stream of Ion values.
     """
-    if c_ext:
+    if c_ext and catalog is None:
         return load_extension(fp, single_value=single_value, encoding='utf-8', **kw)
     else:
         if isinstance(fp, _TEXT_TYPES):
