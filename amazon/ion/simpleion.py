@@ -149,20 +149,23 @@ def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=
         **kw: NOT IMPLEMENTED
 
     """
-
-    raw_writer = binary_writer(imports) if binary else text_writer(indent=indent)
-    writer = blocking_writer(raw_writer, fp)
-    from_type = _FROM_TYPE_TUPLE_AS_SEXP if tuple_as_sexp else _FROM_TYPE
-    if binary or not omit_version_marker:
-        writer.send(ION_VERSION_MARKER_EVENT)  # The IVM is emitted automatically in binary; it's optional in text.
-    if sequence_as_stream and isinstance(obj, (list, tuple)):
-        # Treat this top-level sequence as a stream; serialize its elements as top-level values, but don't serialize the
-        # sequence itself.
-        for top_level in obj:
-            _dump(top_level, writer, from_type)
+    if c_ext and imports is not None:
+        dump_extension(obj, fp, binary=binary, sequence_as_stream=sequence_as_stream, encoding='utf-8',
+                       tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, **kw)
     else:
-        _dump(obj, writer, from_type)
-    writer.send(ION_STREAM_END_EVENT)
+        raw_writer = binary_writer(imports) if binary else text_writer(indent=indent)
+        writer = blocking_writer(raw_writer, fp)
+        from_type = _FROM_TYPE_TUPLE_AS_SEXP if tuple_as_sexp else _FROM_TYPE
+        if binary or not omit_version_marker:
+            writer.send(ION_VERSION_MARKER_EVENT)  # The IVM is emitted automatically in binary; it's optional in text.
+        if sequence_as_stream and isinstance(obj, (list, tuple)):
+            # Treat this top-level sequence as a stream; serialize its elements as top-level values, but don't serialize the
+            # sequence itself.
+            for top_level in obj:
+                _dump(top_level, writer, from_type)
+        else:
+            _dump(obj, writer, from_type)
+        writer.send(ION_STREAM_END_EVENT)
 
 
 _FROM_TYPE = dict(chain(
@@ -360,23 +363,26 @@ def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object
         else:
             A sequence of Python objects representing a stream of Ion values.
     """
-    if isinstance(fp, _TEXT_TYPES):
-        raw_reader = text_reader(is_unicode=True)
+    if c_ext:
+        return load_extension(fp, single_value=single_value, encoding='utf-8', **kw)
     else:
-        maybe_ivm = fp.read(4)
-        fp.seek(0)
-        if maybe_ivm == _IVM:
-            raw_reader = binary_reader()
+        if isinstance(fp, _TEXT_TYPES):
+            raw_reader = text_reader(is_unicode=True)
         else:
-            raw_reader = text_reader()
-    reader = blocking_reader(managed_reader(raw_reader, catalog), fp)
-    out = []  # top-level
-    _load(out, reader)
-    if single_value:
-        if len(out) != 1:
-            raise IonException('Stream contained %d values; expected a single value.' % (len(out),))
-        return out[0]
-    return out
+            maybe_ivm = fp.read(4)
+            fp.seek(0)
+            if maybe_ivm == _IVM:
+                raw_reader = binary_reader()
+            else:
+                raw_reader = text_reader()
+        reader = blocking_reader(managed_reader(raw_reader, catalog), fp)
+        out = []  # top-level
+        _load(out, reader)
+        if single_value:
+            if len(out) != 1:
+                raise IonException('Stream contained %d values; expected a single value.' % (len(out),))
+            return out[0]
+        return out
 
 
 _FROM_ION_TYPE = [
@@ -483,7 +489,3 @@ def load_extension(fp, catalog=None, single_value=True, encoding='utf-8', cls=No
     data = fp.read()
     data = data if isinstance(data, bytes) else bytes(data, encoding)
     return ionc.ionc_read(data, single_value, False)
-
-
-dump = dump_extension if c_ext else dump
-load = load_extension if c_ext else load
