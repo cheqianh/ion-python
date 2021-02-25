@@ -51,35 +51,6 @@ static char _err_msg[ERR_MSG_MAX_LEN];
     #define IONC_READ_ARGS_FORMAT "OOO"
 #endif
 
-static int int_attr_by_name(PyObject* obj, char* attr_name) {
-    // Gets an attribute as an int. NOTE: defaults to 0 if the attribute is None.
-    PyObject* py_int = PyObject_GetAttrString(obj, attr_name);
-    int c_int = 0;
-    if (py_int != Py_None) {
-        c_int = (int)PyInt_AsSsize_t(py_int);
-    }
-    Py_DECREF(py_int);
-    return c_int;
-}
-
-// TODO compare performance of these offset_seconds* methods. The _26 version will work with all versions, so if it is
-// as fast, should be used for all.
-static int offset_seconds_26(PyObject* timedelta) {
-    long microseconds = int_attr_by_name(timedelta, "microseconds");
-    long seconds_microseconds = (long)int_attr_by_name(timedelta, "seconds") * 1000000;
-    long days_microseconds = (long)int_attr_by_name(timedelta, "days") * 24 * 3600 * 1000000;
-    return (microseconds + seconds_microseconds + days_microseconds) / 1000000;
-}
-
-static int offset_seconds(PyObject* timedelta) {
-    PyObject* py_seconds = PyObject_CallMethod(timedelta, "total_seconds", NULL);
-    PyObject* py_seconds_int = PyObject_CallMethod(py_seconds, "__int__", NULL);
-    int seconds = (int)PyInt_AsSsize_t(py_seconds_int);
-    Py_DECREF(py_seconds);
-    Py_DECREF(py_seconds_int);
-    return seconds;
-}
-
 #if PY_VERSION_HEX < 0x02070000
     #define offset_seconds(x) offset_seconds_26(x)
 #endif
@@ -126,6 +97,41 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
 static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value);
 static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values);
 
+
+/******************************************************************************
+*       helper functions                                                      *
+******************************************************************************/
+
+
+static int int_attr_by_name(PyObject* obj, char* attr_name) {
+    // Gets an attribute as an int. NOTE: defaults to 0 if the attribute is None.
+    PyObject* py_int = PyObject_GetAttrString(obj, attr_name);
+    int c_int = 0;
+    if (py_int != Py_None) {
+        c_int = (int)PyInt_AsSsize_t(py_int);
+    }
+    Py_DECREF(py_int);
+    return c_int;
+}
+
+// TODO compare performance of these offset_seconds* methods. The _26 version will work with all versions, so if it is
+// as fast, should be used for all.
+static int offset_seconds_26(PyObject* timedelta) {
+    long microseconds = int_attr_by_name(timedelta, "microseconds");
+    long seconds_microseconds = (long)int_attr_by_name(timedelta, "seconds") * 1000000;
+    long days_microseconds = (long)int_attr_by_name(timedelta, "days") * 24 * 3600 * 1000000;
+    return (microseconds + seconds_microseconds + days_microseconds) / 1000000;
+}
+
+static int offset_seconds(PyObject* timedelta) {
+    PyObject* py_seconds = PyObject_CallMethod(timedelta, "total_seconds", NULL);
+    PyObject* py_seconds_int = PyObject_CallMethod(py_seconds, "__int__", NULL);
+    int seconds = (int)PyInt_AsSsize_t(py_seconds_int);
+    Py_DECREF(py_seconds);
+    Py_DECREF(py_seconds_int);
+    return seconds;
+}
+
 static int ion_type_from_py(PyObject* obj) {
     PyObject* ion_type = NULL;
     if (PyObject_HasAttrString(obj, "ion_type")) {
@@ -163,6 +169,62 @@ static void ion_string_from_py(PyObject* str, ION_STRING* out) {
     ION_STRING_INIT(out);
     ion_string_assign_cstr(out, c_str, c_str_len);
 }
+
+static PyObject* ion_build_py_string(ION_STRING* string_value) {
+    // TODO Test non-ASCII compatibility.
+    // NOTE: this does a copy, which is good.
+    if (!string_value->value) return Py_None;
+    return PyUnicode_FromStringAndSize((char*)(string_value->value), string_value->length);
+}
+
+static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL in_struct, ION_STRING* field_name) {
+    if (in_struct) {
+        PyObject_CallMethodObjArgs(
+            pyContainer,
+            PyString_FromString("add_item"),
+            ion_build_py_string(field_name),
+            (PyObject*)element,
+            NULL
+        );
+    }
+    else {
+        PyList_Append(pyContainer, (PyObject*)element);
+    }
+    Py_XDECREF(element);
+}
+
+//ion spec uses 'd' in a decimal number while python decimal object accepts 'e'.
+static iERR c_decstr_to_py_decstr(char* dec_str) {
+    for (int i = 0; i < strlen(dec_str); i++) {
+        if (dec_str[i] == 'd' || dec_str[i] == 'D') {
+            dec_str[i] = 'e';
+        }
+    }
+}
+
+static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
+    PyObject* py_string_value;
+    PyObject* py_sid;
+    if (string_value->value) {
+        py_string_value = ion_build_py_string(string_value);
+        py_sid = Py_None;
+    } else {
+        py_string_value = Py_None;
+        py_sid = PyLong_FromLong(0);
+    }
+    return PyObject_CallFunctionObjArgs(
+        _py_symboltoken_constructor,
+        py_string_value,
+        py_sid,
+        NULL
+    );
+}
+
+
+/******************************************************************************
+*       Write/Dump functions                                                  *
+******************************************************************************/
+
 
 static iERR ionc_write_symboltoken(hWRITER writer, PyObject* symboltoken, BOOL is_value) {
     iENTER;
@@ -550,9 +612,7 @@ iERR _ionc_write(PyObject* obj, PyObject* tuple_as_sexp, hWRITER writer) {
     iRETURN;
 }
 
-static PyObject *
-ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
-{
+static PyObject* ionc_write(PyObject *self, PyObject *args, PyObject *kwds) {
     iENTER;
     PyObject *obj, *binary, *sequence_as_stream, *tuple_as_sexp;
     ION_STREAM  *ion_stream = NULL;
@@ -633,6 +693,12 @@ fail:
     return exception;
 }
 
+
+/******************************************************************************
+*       Read/Load functions                                                   *
+******************************************************************************/
+
+
 iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL emit_bare_values) {
     iENTER;
     ION_TYPE t;
@@ -645,71 +711,6 @@ iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL em
         IONCHECK(ionc_read_value(hreader, t, container, in_struct, emit_bare_values));
     }
     iRETURN;
-}
-
-static PyObject* ion_build_py_string(ION_STRING* string_value) {
-    // TODO Test non-ASCII compatibility.
-    // NOTE: this does a copy, which is good.
-    if (!string_value->value) return Py_None;
-    return PyUnicode_FromStringAndSize((char*)(string_value->value), string_value->length);
-}
-
-static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL in_struct, ION_STRING* field_name) {
-    if (in_struct) {
-        PyObject_CallMethodObjArgs(
-            pyContainer,
-            PyString_FromString("add_item"),
-            ion_build_py_string(field_name),
-            (PyObject*)element,
-            NULL
-        );
-    }
-    else {
-        PyList_Append(pyContainer, (PyObject*)element);
-    }
-    Py_XDECREF(element);
-}
-
-PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
-    iENTER;
-    hREADER      reader;
-    long         size;
-    char     *buffer = NULL;
-    PyObject *py_buffer = NULL;
-    PyObject *top_level_container = NULL;
-    PyObject *single_value, *emit_bare_values;
-    static char *kwlist[] = {"data", "single_value", "emit_bare_values", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, IONC_READ_ARGS_FORMAT, kwlist, &py_buffer, &single_value, &emit_bare_values)) {
-        FAILWITH(IERR_INVALID_ARG);
-    }
-
-    PyString_AsStringAndSize(py_buffer, &buffer, &size);
-    // TODO what if size is larger than SIZE ?
-    ION_READER_OPTIONS options;
-    memset(&options, 0, sizeof(options));
-    options.decimal_context = &dec_context;
-    IONCHECK(ion_reader_open_buffer(&reader, (BYTE*)buffer, (SIZE)size, &options)); // NULL represents default reader options
-
-    top_level_container = PyList_New(0);
-    IONCHECK(ionc_read_all(reader, top_level_container, FALSE, emit_bare_values == Py_True));
-    IONCHECK(ion_reader_close(reader));
-    if (single_value == Py_True) {
-        Py_ssize_t len = PyList_Size(top_level_container);
-        if (len != 1) {
-            _FAILWITHMSG(IERR_INVALID_ARG, "Single_value option specified; expected a single value.")
-        }
-        PyObject* value = PyList_GetItem(top_level_container, 0);
-        Py_XINCREF(value);
-        Py_DECREF(top_level_container);
-        return value;
-    }
-
-    return top_level_container;
-fail:
-    Py_XDECREF(top_level_container);
-    PyObject* exception = PyErr_Format(_ion_exception_cls, "%s %s", ion_error_to_str(err), _err_msg);
-    _err_msg[0] = '\0';
-    return exception;
 }
 
 static PyObject* ionc_get_timestamp_precision(int precision) {
@@ -801,33 +802,6 @@ static iERR ionc_read_timestamp(hREADER hreader, PyObject** timestamp_out) {
 fail:
     Py_XDECREF(timestamp_args);
     cRETURN;
-}
-
-static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
-    PyObject* py_string_value;
-    PyObject* py_sid;
-    if (string_value->value) {
-        py_string_value = ion_build_py_string(string_value);
-        py_sid = Py_None;
-    } else {
-        py_string_value = Py_None;
-        py_sid = PyLong_FromLong(0);
-    }
-    return PyObject_CallFunctionObjArgs(
-        _py_symboltoken_constructor,
-        py_string_value,
-        py_sid,
-        NULL
-    );
-}
-
-//ion spec uses 'd' in a decimal number while python decimal object accepts 'e'.
-static iERR c_decstr_to_py_decstr(char* dec_str) {
-    for (int i = 0; i < strlen(dec_str); i++) {
-        if (dec_str[i] == 'd' || dec_str[i] == 'D') {
-            dec_str[i] = 'e';
-        }
-    }
 }
 
 static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values_global) {
@@ -1053,6 +1027,54 @@ fail:
     }
     cRETURN;
 }
+
+PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
+    iENTER;
+    hREADER      reader;
+    long         size;
+    char     *buffer = NULL;
+    PyObject *py_buffer = NULL;
+    PyObject *top_level_container = NULL;
+    PyObject *single_value, *emit_bare_values;
+    static char *kwlist[] = {"data", "single_value", "emit_bare_values", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, IONC_READ_ARGS_FORMAT, kwlist, &py_buffer, &single_value, &emit_bare_values)) {
+        FAILWITH(IERR_INVALID_ARG);
+    }
+
+    PyString_AsStringAndSize(py_buffer, &buffer, &size);
+    // TODO what if size is larger than SIZE ?
+    ION_READER_OPTIONS options;
+    memset(&options, 0, sizeof(options));
+    options.decimal_context = &dec_context;
+    IONCHECK(ion_reader_open_buffer(&reader, (BYTE*)buffer, (SIZE)size, &options)); // NULL represents default reader options
+
+    top_level_container = PyList_New(0);
+    IONCHECK(ionc_read_all(reader, top_level_container, FALSE, emit_bare_values == Py_True));
+    IONCHECK(ion_reader_close(reader));
+    if (single_value == Py_True) {
+        Py_ssize_t len = PyList_Size(top_level_container);
+        if (len != 1) {
+            _FAILWITHMSG(IERR_INVALID_ARG, "Single_value option specified; expected a single value.")
+        }
+        PyObject* value = PyList_GetItem(top_level_container, 0);
+        Py_XINCREF(value);
+        Py_DECREF(top_level_container);
+        return value;
+    }
+
+    return top_level_container;
+fail:
+    Py_XDECREF(top_level_container);
+    PyObject* exception = PyErr_Format(_ion_exception_cls, "%s %s", ion_error_to_str(err), _err_msg);
+    _err_msg[0] = '\0';
+    return exception;
+}
+
+
+/******************************************************************************
+*       Initial module                                                        *
+******************************************************************************/
+
 
 static char ioncmodule_docs[] =
     "C extension module for ion-c.\n";
