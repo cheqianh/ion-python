@@ -208,7 +208,8 @@ static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
     if (string_value->value) {
         py_string_value = ion_build_py_string(string_value);
         py_sid = Py_None;
-    } else {
+    }
+    else {
         py_string_value = Py_None;
         py_sid = PyLong_FromLong(0);
     }
@@ -405,10 +406,12 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
             _FAILWITHMSG(IERR_INVALID_ARG, "Found bool; expected BOOL Ion type.");
         }
         BOOL bool_value;
-        if (obj == Py_True)
+        if (obj == Py_True) {
             bool_value = TRUE;
-        else
+        }
+        else {
             bool_value = FALSE;
+        }
         IONCHECK(ion_writer_write_bool(writer, bool_value));
     }
     else if (PyInt_Check(obj)) {
@@ -594,7 +597,8 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
 
         if (PyTuple_Check(obj) && PyObject_IsTrue(tuple_as_sexp)) {
             IONCHECK(ion_writer_start_container(writer, (ION_TYPE)tid_SEXP_INT));
-        } else {
+        }
+        else {
             IONCHECK(ion_writer_start_container(writer, (ION_TYPE)ion_type));
         }
         IONCHECK(ionc_write_sequence(writer, obj, tuple_as_sexp));
