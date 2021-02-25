@@ -258,9 +258,9 @@ static iERR ionc_write_struct(hWRITER writer, PyObject* map, PyObject* tuple_as_
         child_obj = PySequence_Fast_GET_ITEM(seq, i);
         key = PyTuple_GetItem(child_obj, 0);
         val = PyTuple_GetItem(child_obj, 1);
+        Py_INCREF(child_obj);
         Py_INCREF(key);
         Py_INCREF(val);
-        Py_INCREF(child_obj);
 
         if (PyUnicode_Check(key)) {
             ION_STRING field_name;
@@ -287,9 +287,9 @@ static iERR ionc_write_struct(hWRITER writer, PyObject* map, PyObject* tuple_as_
     Py_XDECREF(list);
     Py_XDECREF(seq);
 fail:
+    Py_XDECREF(child_obj);
     Py_XDECREF(key);
     Py_XDECREF(val);
-    Py_XDECREF(child_obj);
     cRETURN;
 }
 
@@ -392,7 +392,7 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
         c_string_from_py(decimal_str, &decimal_c_str, &decimal_c_str_len);
 
         ION_DECIMAL decimal_value;
-        ion_decimal_from_string(&decimal_value, decimal_c_str, &dec_context);
+        IONCHECK(ion_decimal_from_string(&decimal_value, decimal_c_str, &dec_context));
         Py_DECREF(decimal_str);
 
         IONCHECK(ion_writer_write_ion_decimal(writer, &decimal_value));
@@ -544,7 +544,7 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
     iRETURN;
 }
 
-int _ionc_write(PyObject* obj, PyObject* binary, ION_STREAM* ion_stream, PyObject* tuple_as_sexp, hWRITER writer) {
+iERR _ionc_write(PyObject* obj, PyObject* tuple_as_sexp, hWRITER writer) {
     iENTER;
     IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
     iRETURN;
@@ -582,7 +582,7 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
         for (i = 0; i < len; i++) {
             PyObject* pyObj = PySequence_Fast_GET_ITEM(objs, i);
             Py_INCREF(pyObj);
-            err = _ionc_write(pyObj, binary, ion_stream, tuple_as_sexp, writer);
+            err = _ionc_write(pyObj, tuple_as_sexp, writer);
 
             Py_DECREF(pyObj);
             if (err) break;
@@ -592,10 +592,9 @@ ionc_write(PyObject *self, PyObject *args, PyObject *kwds)
         IONCHECK(err);
     }
     else {
-        IONCHECK(_ionc_write(obj, binary, ion_stream, tuple_as_sexp, writer));
+        IONCHECK(_ionc_write(obj, tuple_as_sexp, writer));
     }
     IONCHECK(ion_writer_close(writer));
-
 
     POSITION len = ion_stream_get_position(ion_stream);
     IONCHECK(ion_stream_seek(ion_stream, 0));
@@ -748,6 +747,7 @@ static iERR ionc_read_timestamp(hREADER hreader, PyObject** timestamp_out) {
     PyDict_SetItemString(timestamp_args, "precision", py_precision);
     BOOL has_local_offset;
     IONCHECK(ion_timestamp_has_local_offset(&timestamp_value, &has_local_offset));
+
     if (has_local_offset) {
         int off_minutes, off_hours;
         IONCHECK(ion_timestamp_get_local_offset(&timestamp_value, &off_minutes));
@@ -821,7 +821,7 @@ static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
     );
 }
 
-//ion spec uses 'd' in a decimal number while python decimal object only accepts 'e'.
+//ion spec uses 'd' in a decimal number while python decimal object accepts 'e'.
 static iERR c_decstr_to_py_decstr(char* dec_str) {
     for (int i = 0; i < strlen(dec_str); i++) {
         if (dec_str[i] == 'd' || dec_str[i] == 'D') {
@@ -941,7 +941,7 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
             ION_DECIMAL decimal_value;
             IONCHECK(ion_reader_read_ion_decimal(hreader, &decimal_value));
             char dec_str[DEC_NUMBER_MAX_LEN]; // DECQUAD_String is only 43, which fails some tests.
-            ion_decimal_to_string(&decimal_value, dec_str);
+            IONCHECK(ion_decimal_to_string(&decimal_value, dec_str));
             c_decstr_to_py_decstr(&dec_str);
             py_value = PyObject_CallFunction(_decimal_constructor, "s", dec_str);
             ion_nature_constructor = _ionpydecimal_fromvalue;
