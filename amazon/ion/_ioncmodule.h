@@ -21,6 +21,7 @@
 
 PyObject* ionc_init_module(void);
 iERR _ionc_write(PyObject* obj, PyObject* tuple_as_sexp, hWRITER writer);
+//iERR _ionc_write(PyObject* objs, PyObject* tuple_as_sexp, hWRITER writer, int i);
 PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds);
 iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL emit_bare_values);
 

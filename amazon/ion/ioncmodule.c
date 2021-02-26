@@ -102,16 +102,15 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
 *       helper functions                                                      *
 ******************************************************************************/
 
-
 /*
  *  Gets an attribute as an int. NOTE: defaults to 0 if the attribute is None.
  *
  *  Args:
- *      obj: The object whose attribution will be returned
- *      attr_name: The attribution of the object
+ *      obj: The object whose attribute will be returned
+ *      attr_name: The attribute of the object
  *
  *  Returns:
- *      An int
+ *      The attribute as an int
  */
 static int int_attr_by_name(PyObject* obj, char* attr_name) {
     PyObject* py_int = PyObject_GetAttrString(obj, attr_name);
@@ -142,7 +141,7 @@ static int offset_seconds(PyObject* timedelta) {
 }
 
 /*
- *  Returns an int representing the type of the giving object
+ *  Returns an ion type as an int
  *
  *  Args:
  *      obj: The object whose type will be returned
@@ -162,7 +161,7 @@ static int ion_type_from_py(PyObject* obj) {
 }
 
 /*
- *  Creates a C string from a python string
+ *  Gets a C string from a python string
  *
  *  Args:
  *      str:  The python string that needs to be converted
@@ -189,7 +188,7 @@ static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
 }
 
 /*
- *  Creates an ION_STRING from a python string
+ *  Gets an ION_STRING from a python string
  *
  *  Args:
  *      str:  The python string that needs to be converted
@@ -204,7 +203,7 @@ static void ion_string_from_py(PyObject* str, ION_STRING* out) {
 }
 
 /*
- *  Creates a Python string using a ION_STRING
+ *  Returns a python string using an ION_STRING
  *
  *  Args:
  *      string_value:  The ION_STRING that needs to be converted
@@ -220,13 +219,13 @@ static PyObject* ion_build_py_string(ION_STRING* string_value) {
 }
 
 /*
- *  Added an element into a IonPyDict or List
+ *  Adds an element to a List or IonPyDict
  *
  *  Args:
- *      pyContainer:  A container where new element is added
- *      element:  The element to be added in the container
- *      in_struct:  If the element is inside a struct
- *      field_name:  The field name of a element if the element is inside a struct
+ *      pyContainer:  A container that the element is added to
+ *      element:  The element to be added to the container
+ *      in_struct:  if the element is inside a struct
+ *      field_name:  The field name of the element if it's inside a struct
  */
 static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL in_struct, ION_STRING* field_name) {
     if (in_struct) {
@@ -245,14 +244,12 @@ static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL
 }
 
 /*
- *  Converts a ion decimal string to a python accept decimal string. NOTE: ion spec uses 'd' in a decimal number
+ *  Converts an ion decimal string to a python decimal accept string. NOTE: ion spec uses 'd' in a decimal number
  *  while python decimal object accepts 'e'
  *
  *  Args:
- *      dec_str:  A c string representing a decimal number
+ *      dec_str:  A C string representing a decimal number
  *
- *  Returns:
- *      A c string that can be accept by python decimal constructor
  */
 static void c_decstr_to_py_decstr(char* dec_str) {
     for (int i = 0; i < strlen(dec_str); i++) {
@@ -263,10 +260,10 @@ static void c_decstr_to_py_decstr(char* dec_str) {
 }
 
 /*
- *  Returns a python Symbol token using an ION_STRING
+ *  Returns a python symbol token using an ION_STRING
  *
  *  Args:
- *      string_value:  An ION_STRING that need to be converted
+ *      string_value:  An ION_STRING that needs to be converted
  *
  *  Returns:
  *      A python symbol token
@@ -296,6 +293,15 @@ static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
 ******************************************************************************/
 
 
+/*
+ *  Writes a symbol token value or annotation
+ *
+ *  Args:
+ *      writer:  An ion writer
+ *      symboltoken: The python symbol token that needs to be written
+ *      is_value: Writes a symbol token value if is_value is TRUE, otherwise writes an annotation
+ *
+ */
 static iERR ionc_write_symboltoken(hWRITER writer, PyObject* symboltoken, BOOL is_value) {
     iENTER;
     PyObject* symbol_text = PyObject_GetAttrString(symboltoken, "text");
@@ -325,6 +331,14 @@ static iERR ionc_write_symboltoken(hWRITER writer, PyObject* symboltoken, BOOL i
     iRETURN;
 }
 
+/*
+ *  Writes annotations
+ *
+ *  Args:
+ *      writer:  An ion writer
+ *      obj: A sequence of ion python annotations
+ *
+ */
 static iERR ionc_write_annotations(hWRITER writer, PyObject* obj) {
     iENTER;
     PyObject* annotations = NULL;
@@ -356,6 +370,15 @@ fail:
     cRETURN;
 }
 
+/*
+ *  Writes a list or a sexp
+ *
+ *  Args:
+ *      writer:  An ion writer
+ *      sequence: An ion python list or sexp
+ *      tuple_as_sexp: Decides if a tuple is treated as sexp
+ *
+ */
 static iERR ionc_write_sequence(hWRITER writer, PyObject* sequence, PyObject* tuple_as_sexp) {
     iENTER;
     PyObject* child_obj = NULL;
@@ -379,6 +402,15 @@ fail:
     cRETURN;
 }
 
+/*
+ *  Writes a struct
+ *
+ *  Args:
+ *      writer:  An ion writer
+ *      map: An ion python struct
+ *      tuple_as_sexp: Decides if a tuple is treated as sexp
+ *
+ */
 static iERR ionc_write_struct(hWRITER writer, PyObject* map, PyObject* tuple_as_sexp) {
     iENTER;
     PyObject * list = PyMapping_Items(map);
@@ -425,6 +457,14 @@ fail:
     cRETURN;
 }
 
+/*
+ *  Writes an int
+ *
+ *  Args:
+ *      writer:  An ion writer
+ *      obj: An ion python int
+ *
+ */
 static iERR ionc_write_big_int(hWRITER writer, PyObject *obj) {
     iENTER;
     PyObject* int_str = PyObject_CallMethod(obj, "__str__", NULL);
@@ -440,6 +480,15 @@ fail:
     cRETURN;
 }
 
+/*
+ *  Writes an value
+ *
+ *  Args:
+ *      writer:  An ion writer
+ *      obj: An ion python value
+ *      tuple_as_sexp: Decides if a tuple is treated as sexp
+ *
+ */
 static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp) {
     iENTER;
 
@@ -684,7 +733,19 @@ iERR _ionc_write(PyObject* obj, PyObject* tuple_as_sexp, hWRITER writer) {
     IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
     iRETURN;
 }
+//iERR _ionc_write(PyObject* objs, PyObject* tuple_as_sexp, hWRITER writer, int i) {
+//    iENTER;
+//    PyObject* pyObj = PySequence_Fast_GET_ITEM(objs, i);
+//    Py_INCREF(pyObj);
+//    err = ionc_write_value(writer, pyObj, tuple_as_sexp);
+//    Py_DECREF(pyObj);
+//    iRETURN;
+//}
 
+
+/*
+ *  Entry of the write/dump functions
+ */
 static PyObject* ionc_write(PyObject *self, PyObject *args, PyObject *kwds) {
     iENTER;
     PyObject *obj, *binary, *sequence_as_stream, *tuple_as_sexp;
@@ -720,12 +781,16 @@ static PyObject* ionc_write(PyObject *self, PyObject *args, PyObject *kwds) {
             Py_DECREF(pyObj);
             if (err) break;
         }
+//        for (i = 0; i < len; i++) {
+//            err = _ionc_write(objs, tuple_as_sexp, writer, i);
+//            if (err) break;
+//        }
 
         Py_DECREF(objs);
         IONCHECK(err);
     }
     else {
-        IONCHECK(_ionc_write(obj, tuple_as_sexp, writer));
+        IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
     }
     IONCHECK(ion_writer_close(writer));
 
