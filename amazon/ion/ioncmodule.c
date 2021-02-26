@@ -103,8 +103,17 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
 ******************************************************************************/
 
 
+/*
+ *  Gets an attribute as an int. NOTE: defaults to 0 if the attribute is None.
+ *
+ *  Args:
+ *      obj: The object whose attribution will be returned
+ *      attr_name: The attribution of the object
+ *
+ *  Returns:
+ *      An int
+ */
 static int int_attr_by_name(PyObject* obj, char* attr_name) {
-    // Gets an attribute as an int. NOTE: defaults to 0 if the attribute is None.
     PyObject* py_int = PyObject_GetAttrString(obj, attr_name);
     int c_int = 0;
     if (py_int != Py_None) {
@@ -132,6 +141,15 @@ static int offset_seconds(PyObject* timedelta) {
     return seconds;
 }
 
+/*
+ *  Returns an int representing the type of the giving object
+ *
+ *  Args:
+ *      obj: The object whose type will be returned
+ *
+ *  Returns:
+ *      An int in 'c_ion_type_table' representing the ion type
+ */
 static int ion_type_from_py(PyObject* obj) {
     PyObject* ion_type = NULL;
     if (PyObject_HasAttrString(obj, "ion_type")) {
@@ -143,6 +161,14 @@ static int ion_type_from_py(PyObject* obj) {
     return c_type;
 }
 
+/*
+ *  Creates a C string from a python string
+ *
+ *  Args:
+ *      str:  The python string that needs to be converted
+ *      out:  The C string converted from 'str'
+ *      len_out:  Length of 'out'
+ */
 static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
 #if PY_MAJOR_VERSION >= 3
     *out = PyUnicode_AsUTF8AndSize(str, len_out);
@@ -162,6 +188,13 @@ static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
 #endif
 }
 
+/*
+ *  Creates an ION_STRING from a python string
+ *
+ *  Args:
+ *      str:  The python string that needs to be converted
+ *      out:  The ION_STRING converted from 'str'
+ */
 static void ion_string_from_py(PyObject* str, ION_STRING* out) {
     char* c_str = NULL;
     Py_ssize_t c_str_len;
@@ -170,6 +203,15 @@ static void ion_string_from_py(PyObject* str, ION_STRING* out) {
     ion_string_assign_cstr(out, c_str, c_str_len);
 }
 
+/*
+ *  Creates a Python string using a ION_STRING
+ *
+ *  Args:
+ *      string_value:  The ION_STRING that needs to be converted
+ *
+ *  Returns:
+ *      A python string
+ */
 static PyObject* ion_build_py_string(ION_STRING* string_value) {
     // TODO Test non-ASCII compatibility.
     // NOTE: this does a copy, which is good.
@@ -177,6 +219,15 @@ static PyObject* ion_build_py_string(ION_STRING* string_value) {
     return PyUnicode_FromStringAndSize((char*)(string_value->value), string_value->length);
 }
 
+/*
+ *  Added an element into a IonPyDict or List
+ *
+ *  Args:
+ *      pyContainer:  A container where new element is added
+ *      element:  The element to be added in the container
+ *      in_struct:  If the element is inside a struct
+ *      field_name:  The field name of a element if the element is inside a struct
+ */
 static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL in_struct, ION_STRING* field_name) {
     if (in_struct) {
         PyObject_CallMethodObjArgs(
@@ -193,8 +244,17 @@ static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL
     Py_XDECREF(element);
 }
 
-//ion spec uses 'd' in a decimal number while python decimal object accepts 'e'.
-static iERR c_decstr_to_py_decstr(char* dec_str) {
+/*
+ *  Converts a ion decimal string to a python accept decimal string. NOTE: ion spec uses 'd' in a decimal number
+ *  while python decimal object accepts 'e'
+ *
+ *  Args:
+ *      dec_str:  A c string representing a decimal number
+ *
+ *  Returns:
+ *      A c string that can be accept by python decimal constructor
+ */
+static void c_decstr_to_py_decstr(char* dec_str) {
     for (int i = 0; i < strlen(dec_str); i++) {
         if (dec_str[i] == 'd' || dec_str[i] == 'D') {
             dec_str[i] = 'e';
@@ -202,6 +262,15 @@ static iERR c_decstr_to_py_decstr(char* dec_str) {
     }
 }
 
+/*
+ *  Returns a python Symbol token using an ION_STRING
+ *
+ *  Args:
+ *      string_value:  An ION_STRING that need to be converted
+ *
+ *  Returns:
+ *      A python symbol token
+ */
 static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
     PyObject* py_string_value;
     PyObject* py_sid;
@@ -703,20 +772,6 @@ fail:
 ******************************************************************************/
 
 
-iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL emit_bare_values) {
-    iENTER;
-    ION_TYPE t;
-    for (;;) {
-        IONCHECK(ion_reader_next(hreader, &t));
-        if (t == tid_EOF) {
-            assert(t == tid_EOF && "next() at end");
-            break;
-        }
-        IONCHECK(ionc_read_value(hreader, t, container, in_struct, emit_bare_values));
-    }
-    iRETURN;
-}
-
 static PyObject* ionc_get_timestamp_precision(int precision) {
     int precision_index = -1;
     while (precision) {
@@ -724,17 +779,6 @@ static PyObject* ionc_get_timestamp_precision(int precision) {
         precision = precision >> 1;
     }
     return py_ion_timestamp_precision_table[precision_index];
-}
-
-static iERR ionc_read_into_container(hREADER hreader, PyObject* container, BOOL is_struct, BOOL emit_bare_values) {
-    iENTER;
-    IONCHECK(ion_reader_step_in(hreader));
-    IONCHECK(Py_EnterRecursiveCall(" while reading an Ion container"));
-    err = ionc_read_all(hreader, container, is_struct, emit_bare_values);
-    Py_LeaveRecursiveCall();
-    IONCHECK(err);
-    IONCHECK(ion_reader_step_out(hreader));
-    iRETURN;
 }
 
 static iERR ionc_read_timestamp(hREADER hreader, PyObject** timestamp_out) {
@@ -806,6 +850,17 @@ static iERR ionc_read_timestamp(hREADER hreader, PyObject** timestamp_out) {
 fail:
     Py_XDECREF(timestamp_args);
     cRETURN;
+}
+
+static iERR ionc_read_into_container(hREADER hreader, PyObject* container, BOOL is_struct, BOOL emit_bare_values) {
+    iENTER;
+    IONCHECK(ion_reader_step_in(hreader));
+    IONCHECK(Py_EnterRecursiveCall(" while reading an Ion container"));
+    err = ionc_read_all(hreader, container, is_struct, emit_bare_values);
+    Py_LeaveRecursiveCall();
+    IONCHECK(err);
+    IONCHECK(ion_reader_step_out(hreader));
+    iRETURN;
 }
 
 static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values_global) {
@@ -1030,6 +1085,20 @@ fail:
         Py_XDECREF(py_value);
     }
     cRETURN;
+}
+
+iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL emit_bare_values) {
+    iENTER;
+    ION_TYPE t;
+    for (;;) {
+        IONCHECK(ion_reader_next(hreader, &t));
+        if (t == tid_EOF) {
+            assert(t == tid_EOF && "next() at end");
+            break;
+        }
+        IONCHECK(ionc_read_value(hreader, t, container, in_struct, emit_bare_values));
+    }
+    iRETURN;
 }
 
 PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
