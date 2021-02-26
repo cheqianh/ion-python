@@ -1,18 +1,3 @@
-// Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License").
-// You may not use this file except in compliance with the License.
-// A copy of the License is located at:
-//
-//    http://aws.amazon.com/apache2.0/
-//
-// or in the "license" file accompanying this file. This file is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
-// OF ANY KIND, either express or implied. See the License for the
-// specific language governing permissions and limitations under the
-// License.
-
-
 #include <Python.h>
 #include "datetime.h"
 #include "_ioncmodule.h"
@@ -106,11 +91,11 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
  *  Gets an attribute as an int. NOTE: defaults to 0 if the attribute is None.
  *
  *  Args:
- *      obj: The object whose attribute will be returned
- *      attr_name: The attribute of the object
+ *      obj: An object whose attribute will be returned
+ *      attr_name: An attribute name of the object
  *
  *  Returns:
- *      The attribute as an int
+ *      An attribute as an int
  */
 static int int_attr_by_name(PyObject* obj, char* attr_name) {
     PyObject* py_int = PyObject_GetAttrString(obj, attr_name);
@@ -144,10 +129,10 @@ static int offset_seconds(PyObject* timedelta) {
  *  Returns an ion type as an int
  *
  *  Args:
- *      obj: The object whose type will be returned
+ *      obj: An object whose type will be returned
  *
  *  Returns:
- *      An int in 'c_ion_type_table' representing the ion type
+ *      An int in 'c_ion_type_table' representing an ion type
  */
 static int ion_type_from_py(PyObject* obj) {
     PyObject* ion_type = NULL;
@@ -164,8 +149,8 @@ static int ion_type_from_py(PyObject* obj) {
  *  Gets a C string from a python string
  *
  *  Args:
- *      str:  The python string that needs to be converted
- *      out:  The C string converted from 'str'
+ *      str:  A python string that needs to be converted
+ *      out:  A C string converted from 'str'
  *      len_out:  Length of 'out'
  */
 static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
@@ -191,8 +176,8 @@ static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
  *  Gets an ION_STRING from a python string
  *
  *  Args:
- *      str:  The python string that needs to be converted
- *      out:  The ION_STRING converted from 'str'
+ *      str:  A python string that needs to be converted
+ *      out:  An ION_STRING converted from 'str'
  */
 static void ion_string_from_py(PyObject* str, ION_STRING* out) {
     char* c_str = NULL;
@@ -206,7 +191,7 @@ static void ion_string_from_py(PyObject* str, ION_STRING* out) {
  *  Returns a python string using an ION_STRING
  *
  *  Args:
- *      string_value:  The ION_STRING that needs to be converted
+ *      string_value:  An ION_STRING that needs to be converted
  *
  *  Returns:
  *      A python string
@@ -219,13 +204,13 @@ static PyObject* ion_build_py_string(ION_STRING* string_value) {
 }
 
 /*
- *  Adds an element to a List or IonPyDict
+ *  Adds an element to a List or struct
  *
  *  Args:
  *      pyContainer:  A container that the element is added to
  *      element:  The element to be added to the container
- *      in_struct:  if the element is inside a struct
- *      field_name:  The field name of the element if it's inside a struct
+ *      in_struct:  if the current state is in a struct
+ *      field_name:  The field name of the element if it is inside a struct
  */
 static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL in_struct, ION_STRING* field_name) {
     if (in_struct) {
@@ -294,11 +279,11 @@ static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
 
 
 /*
- *  Writes a symbol token value or annotation
+ *  Writes a symbol token. NOTE: It can be either a value or an annotation
  *
  *  Args:
  *      writer:  An ion writer
- *      symboltoken: The python symbol token that needs to be written
+ *      symboltoken: A python symbol token
  *      is_value: Writes a symbol token value if is_value is TRUE, otherwise writes an annotation
  *
  */
@@ -375,7 +360,7 @@ fail:
  *
  *  Args:
  *      writer:  An ion writer
- *      sequence: An ion python list or sexp
+ *      sequence: A python object representing list or sexp
  *      tuple_as_sexp: Decides if a tuple is treated as sexp
  *
  */
@@ -481,7 +466,7 @@ fail:
 }
 
 /*
- *  Writes an value
+ *  Writes a value
  *
  *  Args:
  *      writer:  An ion writer
@@ -729,13 +714,13 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
 }
 
 /*
- *  A helper function to write sequence of ion values
+ *  A helper function to write a sequence of ion values
  *
  *  Args:
  *      writer:  An ion writer
  *      objs:  A sequence of ion values
  *      tuple_as_sexp: Decides if a tuple is treated as sexp
- *      int i: The i-th value of 'objs' going to write
+ *      int i: The i-th value of 'objs' that is going to write
  *
  */
 static iERR _ionc_write(hWRITER writer, PyObject* objs, PyObject* tuple_as_sexp, int i) {
@@ -920,7 +905,7 @@ fail:
  *  Args:
  *      hreader:  An ion reader
  *      container:  A container that elements are read from
- *      is_struct:  if the container is an ion struct
+ *      is_struct:  If the container is an ion struct
  *      emit_bare_values: Decides if the value needs to be wrapped
  *
  */
@@ -935,6 +920,16 @@ static iERR ionc_read_into_container(hREADER hreader, PyObject* container, BOOL 
     iRETURN;
 }
 
+/*
+ *  Help function for 'ionc_read_all', reads an ion value
+ *
+ *  Args:
+ *      hreader:  An ion reader
+ *      ION_TYPE:  The ion type of the reading value as an int
+ *      in_struct:  If the current state is in a struct
+ *      emit_bare_values_global: Decides if the value needs to be wrapped
+ *
+ */
 static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values_global) {
     iENTER;
 
@@ -988,6 +983,7 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
         case tid_NULL_INT:
         {
             ION_TYPE null_type;
+            // Hack for ion-c issue https://github.com/amzn/ion-c/issues/223
             if (original_t != tid_SYMBOL_INT) {
                 IONCHECK(ion_reader_read_null(hreader, &null_type));
             }
@@ -1160,12 +1156,12 @@ fail:
 }
 
 /*
- *  Reads values from a container
+ *  Reads ion values
  *
  *  Args:
  *      hreader:  An ion reader
  *      container:  A container that elements are read from
- *      in_struct:  if it's in ion struct
+ *      in_struct:  If the current state is in a struct
  *      emit_bare_values: Decides if the value needs to be wrapped
  *
  */
