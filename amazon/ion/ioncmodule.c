@@ -728,20 +728,24 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
     iRETURN;
 }
 
-iERR _ionc_write(PyObject* obj, PyObject* tuple_as_sexp, hWRITER writer) {
+/*
+ *  A helper function to write sequence of ion values
+ *
+ *  Args:
+ *      writer:  An ion writer
+ *      objs:  A sequence of ion values
+ *      tuple_as_sexp: Decides if a tuple is treated as sexp
+ *      int i: The i-th value of 'objs' going to write
+ *
+ */
+static iERR _ionc_write(hWRITER writer, PyObject* objs, PyObject* tuple_as_sexp, int i) {
     iENTER;
-    IONCHECK(ionc_write_value(writer, obj, tuple_as_sexp));
+    PyObject* pyObj = PySequence_Fast_GET_ITEM(objs, i);
+    Py_INCREF(pyObj);
+    err = ionc_write_value(writer, pyObj, tuple_as_sexp);
+    Py_DECREF(pyObj);
     iRETURN;
 }
-//iERR _ionc_write(PyObject* objs, PyObject* tuple_as_sexp, hWRITER writer, int i) {
-//    iENTER;
-//    PyObject* pyObj = PySequence_Fast_GET_ITEM(objs, i);
-//    Py_INCREF(pyObj);
-//    err = ionc_write_value(writer, pyObj, tuple_as_sexp);
-//    Py_DECREF(pyObj);
-//    iRETURN;
-//}
-
 
 /*
  *  Entry of the write/dump functions
@@ -773,18 +777,11 @@ static PyObject* ionc_write(PyObject *self, PyObject *args, PyObject *kwds) {
         Py_ssize_t len = PySequence_Size(objs);
         Py_ssize_t i;
         BOOL last_element = FALSE;
-        for (i = 0; i < len; i++) {
-            PyObject* pyObj = PySequence_Fast_GET_ITEM(objs, i);
-            Py_INCREF(pyObj);
-            err = _ionc_write(pyObj, tuple_as_sexp, writer);
 
-            Py_DECREF(pyObj);
+        for (i = 0; i < len; i++) {
+            err = _ionc_write(writer, objs, tuple_as_sexp, i);
             if (err) break;
         }
-//        for (i = 0; i < len; i++) {
-//            err = _ionc_write(objs, tuple_as_sexp, writer, i);
-//            if (err) break;
-//        }
 
         Py_DECREF(objs);
         IONCHECK(err);
@@ -917,6 +914,16 @@ fail:
     cRETURN;
 }
 
+/*
+ *  Reads values from a container
+ *
+ *  Args:
+ *      hreader:  An ion reader
+ *      container:  A container that elements are read from
+ *      is_struct:  if the container is an ion struct
+ *      emit_bare_values: Decides if the value needs to be wrapped
+ *
+ */
 static iERR ionc_read_into_container(hREADER hreader, PyObject* container, BOOL is_struct, BOOL emit_bare_values) {
     iENTER;
     IONCHECK(ion_reader_step_in(hreader));
@@ -1152,6 +1159,16 @@ fail:
     cRETURN;
 }
 
+/*
+ *  Reads values from a container
+ *
+ *  Args:
+ *      hreader:  An ion reader
+ *      container:  A container that elements are read from
+ *      in_struct:  if it's in ion struct
+ *      emit_bare_values: Decides if the value needs to be wrapped
+ *
+ */
 iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL emit_bare_values) {
     iENTER;
     ION_TYPE t;
@@ -1166,6 +1183,9 @@ iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL em
     iRETURN;
 }
 
+/*
+ *  Entry of the read/load functions
+ */
 PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
     iENTER;
     hREADER      reader;
