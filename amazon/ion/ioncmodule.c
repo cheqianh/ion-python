@@ -359,7 +359,7 @@ fail:
  *
  *  Args:
  *      writer:  An ion writer
- *      sequence: A python object representing list or sexp
+ *      sequence: An ion python list or sexp
  *      tuple_as_sexp: Decides if a tuple is treated as sexp
  *
  */
@@ -735,7 +735,7 @@ static iERR _ionc_write(hWRITER writer, PyObject* objs, PyObject* tuple_as_sexp,
 }
 
 /*
- *  Entry point of the write/dump functions
+ *  Entry point of write/dump functions
  */
 static PyObject* ionc_write(PyObject *self, PyObject *args, PyObject *kwds) {
     iENTER;
