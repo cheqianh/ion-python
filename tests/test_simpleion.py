@@ -268,8 +268,11 @@ def _dump_load_run(p, dumps_func, loads_func, binary):
             # The payload contains a LST. The value comes last, so compare the end bytes.
             assert p.expected == res[len(res) - len(p.expected):]
     # test load
-    res = loads_func(res, single_value=(not p.stream))
-    _assert_symbol_aware_ion_equals(p.obj, res)
+    res_py = loads_func(res, single_value=(not p.stream), force_python_impl=True)
+    _assert_symbol_aware_ion_equals(p.obj, res_py)
+    if c_ext:
+        res_c = loads_func(res, single_value=(not p.stream))
+        _assert_symbol_aware_ion_equals(p.obj, res_c)
 
 
 def _simple_dumps(obj, *args, **kw):

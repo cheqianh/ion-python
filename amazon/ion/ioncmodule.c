@@ -20,6 +20,7 @@ static char _err_msg[ERR_MSG_MAX_LEN];
 
 #define _FAILWITHMSG(x, msg) { err = x; snprintf(_err_msg, ERR_MSG_MAX_LEN, msg); goto fail; }
 
+// Python 2/3 compatibility
 #if PY_MAJOR_VERSION >= 3
     #define IONC_BYTES_FORMAT "y#"
     #define IONC_READ_ARGS_FORMAT "OOO"
@@ -78,10 +79,6 @@ static PyObject* _exception_module;
 static PyObject* _ion_exception_cls;
 static decContext dec_context;
 
-static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp);
-static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value);
-static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values);
-
 
 /******************************************************************************
 *       helper functions                                                      *
@@ -92,7 +89,7 @@ static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BO
  *
  *  Args:
  *      obj: An object whose attribute will be returned
- *      attr_name: An attribute name of the object
+ *      attr_name: An attribute of the object
  *
  *  Returns:
  *      An attribute as an int
@@ -126,7 +123,7 @@ static int offset_seconds(PyObject* timedelta) {
 }
 
 /*
- *  Returns an ion type as an int
+ *  Returns the ion type of an object as an int
  *
  *  Args:
  *      obj: An object whose type will be returned
@@ -188,7 +185,7 @@ static void ion_string_from_py(PyObject* str, ION_STRING* out) {
 }
 
 /*
- *  Returns a python string using an ION_STRING
+ *  Builds a python string using an ION_STRING
  *
  *  Args:
  *      string_value:  An ION_STRING that needs to be converted
@@ -229,7 +226,7 @@ static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL
 }
 
 /*
- *  Converts an ion decimal string to a python decimal accept string. NOTE: ion spec uses 'd' in a decimal number
+ *  Converts an ion decimal string to a python-decimal-accept string. NOTE: ion spec uses 'd' in a decimal number
  *  while python decimal object accepts 'e'
  *
  *  Args:
@@ -253,7 +250,7 @@ static void c_decstr_to_py_decstr(char* dec_str) {
  *  Returns:
  *      A python symbol token
  */
-static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
+PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
     PyObject* py_string_value;
     PyObject* py_sid;
     if (string_value->value) {
@@ -274,7 +271,7 @@ static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
 
 
 /******************************************************************************
-*       Write/Dump functions                                                  *
+*       Write/Dump APIs                                                       *
 ******************************************************************************/
 
 
@@ -332,9 +329,11 @@ static iERR ionc_write_annotations(hWRITER writer, PyObject* obj) {
     }
 
     if (annotations == NULL || PyObject_Not(annotations)) SUCCEED();
+
     annotations = PySequence_Fast(annotations, "expected sequence");
     Py_ssize_t len = PySequence_Size(annotations);
     Py_ssize_t i;
+
     for (i = 0; i < len; i++) {
         PyObject* pyAnnotation = PySequence_Fast_GET_ITEM(annotations, i);
         Py_INCREF(pyAnnotation);
@@ -370,9 +369,11 @@ static iERR ionc_write_sequence(hWRITER writer, PyObject* sequence, PyObject* tu
     sequence = PySequence_Fast(sequence, "expected sequence");
     Py_ssize_t len = PySequence_Size(sequence);
     Py_ssize_t i;
+
     for (i = 0; i < len; i++) {
         child_obj = PySequence_Fast_GET_ITEM(sequence, i);
         Py_INCREF(child_obj);
+
         IONCHECK(Py_EnterRecursiveCall(" while writing an Ion sequence"));
         err = ionc_write_value(writer, child_obj, tuple_as_sexp);
         Py_LeaveRecursiveCall();
@@ -403,6 +404,7 @@ static iERR ionc_write_struct(hWRITER writer, PyObject* map, PyObject* tuple_as_
     PyObject * key = NULL, *val = NULL, *child_obj = NULL;
     Py_ssize_t len = PySequence_Size(seq);
     Py_ssize_t i;
+
     for (i = 0; i < len; i++) {
         child_obj = PySequence_Fast_GET_ITEM(seq, i);
         key = PyTuple_GetItem(child_obj, 0);
@@ -474,7 +476,7 @@ fail:
  *      tuple_as_sexp: Decides if a tuple is treated as sexp
  *
  */
-static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp) {
+iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp) {
     iENTER;
 
     if (obj == Py_None) {
@@ -720,7 +722,7 @@ static iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_s
  *      writer:  An ion writer
  *      objs:  A sequence of ion values
  *      tuple_as_sexp: Decides if a tuple is treated as sexp
- *      int i: The i-th value of 'objs' that is going to write
+ *      int i: The i-th value of 'objs' that is going to be written
  *
  */
 static iERR _ionc_write(hWRITER writer, PyObject* objs, PyObject* tuple_as_sexp, int i) {
@@ -733,7 +735,7 @@ static iERR _ionc_write(hWRITER writer, PyObject* objs, PyObject* tuple_as_sexp,
 }
 
 /*
- *  Entry of the write/dump functions
+ *  Entry point of the write/dump functions
  */
 static PyObject* ionc_write(PyObject *self, PyObject *args, PyObject *kwds) {
     iENTER;
@@ -750,7 +752,7 @@ static PyObject* ionc_write(PyObject *self, PyObject *args, PyObject *kwds) {
     Py_INCREF(tuple_as_sexp);
     IONCHECK(ion_stream_open_memory_only(&ion_stream));
 
-    //Create a writer here to avoid re-create writer for each element when sequence_as_stream is True.
+    //Create a writer here to avoid re-create writers for each element when sequence_as_stream is True.
     hWRITER writer;
     ION_WRITER_OPTIONS options;
     memset(&options, 0, sizeof(options));
@@ -815,7 +817,7 @@ fail:
 
 
 /******************************************************************************
-*       Read/Load functions                                                   *
+*       Read/Load APIs                                                        *
 ******************************************************************************/
 
 
@@ -921,7 +923,7 @@ static iERR ionc_read_into_container(hREADER hreader, PyObject* container, BOOL 
 }
 
 /*
- *  Help function for 'ionc_read_all', reads an ion value
+ *  Helper function for 'ionc_read_all', reads an ion value
  *
  *  Args:
  *      hreader:  An ion reader
@@ -930,7 +932,7 @@ static iERR ionc_read_into_container(hREADER hreader, PyObject* container, BOOL 
  *      emit_bare_values_global: Decides if the value needs to be wrapped
  *
  */
-static iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values_global) {
+iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values_global) {
     iENTER;
 
     BOOL        emit_bare_values = emit_bare_values_global;
@@ -1180,7 +1182,7 @@ iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL em
 }
 
 /*
- *  Entry of the read/load functions
+ *  Entry point of read/load functions
  */
 PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds) {
     iENTER;
@@ -1242,7 +1244,7 @@ static PyMethodDef ioncmodule_funcs[] = {
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "ionc",       /* m_name */
+    "ionc",             /* m_name */
     ioncmodule_docs,    /* m_doc */
     -1,                 /* m_size */
     ioncmodule_funcs,   /* m_methods */
