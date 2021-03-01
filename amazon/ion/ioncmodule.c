@@ -250,7 +250,7 @@ static void c_decstr_to_py_decstr(char* dec_str) {
  *  Returns:
  *      A python symbol token
  */
-PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
+static PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value) {
     PyObject* py_string_value;
     PyObject* py_sid;
     if (string_value->value) {

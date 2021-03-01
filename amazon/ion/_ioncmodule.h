@@ -6,7 +6,6 @@
 #include "ion.h"
 
 PyObject* ionc_init_module(void);
-PyObject* ion_string_to_py_symboltoken(ION_STRING* string_value);
 iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp);
 PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds);
 iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL emit_bare_values);
