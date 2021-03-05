@@ -22,11 +22,12 @@ from setuptools import setup, find_packages, Extension
 from install import _install_ionc
 
 
-def run_setup():
+def run_setup(force_python_impl=False):
     # init and build ion-c module for C extension.
-    c_ext = _install_ionc()
+    c_ext = _install_ionc() if not force_python_impl else False
 
     if c_ext:
+        print('Ion-c build succeed. C extension is enabled!')
         kw = dict(
             ext_modules=[
                 Extension(
@@ -41,9 +42,9 @@ def run_setup():
             ],
         )
     else:
-        print('Failed to build c extension.')
-        print('Using pure python implementation instead.')
+        print('Using pure python implementation.')
         kw = dict()
+
 
     setup(
         name='amazon.ion',
@@ -72,5 +73,11 @@ def run_setup():
     )
 
 
-run_setup()
+try:
+    run_setup()
+except:
+    print('Build failed.')
+    print('Trying again with pure python implementation.')
+    run_setup(force_python_impl=True)
+
 
