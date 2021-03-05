@@ -18,12 +18,14 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import subprocess
 import sys
-from subprocess import call, check_output, CalledProcessError, Popen, PIPE
-from os.path import isfile, join, abspath, split, isdir, dirname
+from subprocess import call, Popen, PIPE, check_call
+from os.path import join, abspath, isdir, dirname
 
 _PYPY = hasattr(sys, 'pypy_translation_info')
 
+_IONC_REPO_URL = "https://github.com/amzn/ion-c.git"
 _IONC_LOCATION = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'build', 'release'))
 _IONC_INCLUDES_LOCATIONS = {
     'ionc': abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'ionc', 'include', 'ionc')),
@@ -56,25 +58,43 @@ def _link_includes(name):
 
 def _download_ionc():
     # Install ion-c
-    call(['git', 'submodule', 'update', '--init', '--recursive'])
-    # Build
+    if not isdir('./ion-c'):
+        check_call(['git', 'clone', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
+
     os.chdir('ion-c/')
-    call(['./build-release.sh'])
+    # Init submodule
+    check_call(['git', 'submodule', 'update', '--init'])
+    # Builds ion-c
+    check_call(['./build-release.sh'])
     os.chdir('../')
+
+
+def _check_dependencies():
+    check_call(['git', '--version'])
 
 
 def _install_ionc():
     if _PYPY:  # This is pointless if running with PyPy, which doesn't support CPython extensions anyway.
         return False
+    try:
+        _check_dependencies()
+    except:
+        print('C extension initialize error: Missing dependencies.')
+        return False
 
     if not _library_exists('ionc'):
-        _download_ionc()
+        try:
+            _download_ionc()
+        except:
+            print('C extension initialize error: Unable to fetch and build ion-c library.')
+            return False
         _link_library('ionc')
+        _link_includes('ionc')
     if not _library_exists('decNumber'):
         _link_library('decNumber')
-    _link_includes('ionc')
-    _link_includes('decNumber')
+        _link_includes('decNumber')
+    return True
 
 
 if __name__ == "__main__":
-    _install_ionc()
+    res = _install_ionc()

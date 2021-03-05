@@ -21,15 +21,12 @@ from setuptools import setup, find_packages, Extension
 
 from install import _install_ionc
 
-# I/O for C extension.
-c_ext = 1
 
+def run_setup():
+    # init and build ion-c module for C extension.
+    c_ext = _install_ionc()
 
-def run_setup(c_ext):
     if c_ext:
-        # init and build ion-c module for C extension.
-        _install_ionc()
-
         kw = dict(
             ext_modules=[
                 Extension(
@@ -44,6 +41,8 @@ def run_setup(c_ext):
             ],
         )
     else:
+        print('Failed to build c extension.')
+        print('Using pure python implementation instead.')
         kw = dict()
 
     setup(
@@ -73,5 +72,5 @@ def run_setup(c_ext):
     )
 
 
-run_setup(c_ext)
+run_setup()
 
