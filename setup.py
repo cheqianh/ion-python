@@ -19,7 +19,7 @@ from __future__ import print_function
 
 from setuptools import setup, find_packages, Extension
 
-from install import _install_ionc
+from amazon.ion.install import _install_ionc
 
 
 def run_setup(force_python_impl=False):
