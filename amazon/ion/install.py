@@ -18,27 +18,39 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import platform
 import subprocess
 import sys
 from subprocess import call, Popen, PIPE, check_call
 from os.path import join, abspath, isdir, dirname
 
 _PYPY = hasattr(sys, 'pypy_translation_info')
+_OS = platform.system()
+_WIN = _OS == 'Windows'
+_MAC = _OS == 'Darwin'
 
 _IONC_REPO_URL = "https://github.com/amzn/ion-c.git"
-_IONC_LOCATION = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'build', 'release'))
+_IONC_LOCATION = abspath(join(dirname(os.path.abspath(__file__)), '..', '..', 'ion-c', 'build', 'release'))
 _IONC_INCLUDES_LOCATIONS = {
-    'ionc': abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'ionc', 'include', 'ionc')),
-    'decNumber': abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'decNumber', 'include', 'decNumber'))
+    'ionc': abspath(join(dirname(os.path.abspath(__file__)), '..', '..', 'ion-c', 'ionc', 'include', 'ionc')),
+    'decNumber': abspath(join(dirname(os.path.abspath(__file__)), '..', '..', 'ion-c', 'decNumber', 'include', 'decNumber'))
 }
 _USERLIB_LOCATION = abspath(join(os.sep, 'usr', 'local', 'lib'))
 _USERINCLUDE_LOCATION = abspath(join(os.sep, 'usr', 'local', 'include'))
+
 
 _LIB_SUFFIX = '.dylib'
 _LIB_PREFIX = 'lib'
 
 
-def _library_exists(name):
+def _library_exists():
+    if _MAC:
+        return _library_exists_mac('ionc') and _library_exists_mac('decNumber')
+    elif _WIN:
+        return True
+
+
+def _library_exists_mac(name):
     proc = Popen(['ld', '-l%s' % name], stderr=PIPE, stdout=PIPE)
     stdout, stderr = proc.communicate()
     return (b'library not found' not in stdout and
@@ -57,42 +69,57 @@ def _link_includes(name):
 
 
 def _download_ionc():
-    # Install ion-c
-    if not isdir('./ion-c'):
-        check_call(['git', 'clone', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
+    try:
+        # Install ion-c
+        if not isdir('./ion-c'):
+            check_call(['git', 'clone', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
 
-    os.chdir('ion-c/')
-    # Init submodule
-    check_call(['git', 'submodule', 'update', '--init'])
-    # Builds ion-c
+        os.chdir('ion-c/')
+        # Init submodule
+        check_call(['git', 'submodule', 'update', '--init'])
+        # Builds ion-c
+        if _WIN:
+            _build_ionc_win()
+        elif _MAC:
+            _build_ionc_mac()
+        os.chdir('../')
+    except:
+        print('ionc build error: Unable to build ion-c library.')
+
+
+def _build_ionc_mac():
     check_call(['./build-release.sh'])
-    os.chdir('../')
+    _link_library('ionc')
+    _link_includes('ionc')
+    _link_library('decNumber')
+    _link_includes('decNumber')
+
+
+def _build_ionc_win():
+    check_call('cmake -G \"Visual Studio 15 2017 Win64\"')
+    check_call('cmake --build . --config Release')
 
 
 def _check_dependencies():
-    check_call(['git', '--version'])
+    try:
+        check_call(['git', '--version'])
+    except:
+        print('ion-c build error: Missing dependencies.')
+        return False
+    return True
 
 
 def _install_ionc():
     if _PYPY:  # This is pointless if running with PyPy, which doesn't support CPython extensions anyway.
         return False
-    try:
-        _check_dependencies()
-    except:
-        print('ion-c build error: Missing dependencies.')
+
+    if not _check_dependencies():
         return False
 
-    if not _library_exists('ionc'):
-        try:
-            _download_ionc()
-        except:
-            print('ionc build error: Unable to fetch and build ion-c library.')
+    if not _library_exists():
+        if not _download_ionc():
             return False
-        _link_library('ionc')
-        _link_includes('ionc')
-    if not _library_exists('decNumber'):
-        _link_library('decNumber')
-        _link_includes('decNumber')
+
     return True
 
 
