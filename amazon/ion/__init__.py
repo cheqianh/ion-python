@@ -18,7 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 __author__ = 'Amazon.com, Inc.'
-__version__ = '0.7.0'
+__version__ = '0.7.5'
 
 __all__ = [
     'core',
@@ -36,5 +36,5 @@ __all__ = [
     'writer_binary_raw_fields',
     'writer_buffer',
     'writer_text',
-    'install'
+    'install',
 ]

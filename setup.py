@@ -17,15 +17,24 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+from subprocess import check_call
+
 from setuptools import setup, find_packages, Extension
 
 from amazon.ion.install import _install_ionc
+from setuptools.command.install import install
+
+
+class CustomInstall(install):
+    def run(self):
+        install.run(self)
+        check_call('cmake --build . --config Release')
 
 
 def run_setup(force_python_impl=False):
     # init and build ion-c module for C extension.
     c_ext = _install_ionc() if not force_python_impl else False
-
     if c_ext:
         print('Ion-c build succeed. C extension is enabled!')
         kw = dict(
@@ -36,7 +45,8 @@ def run_setup(force_python_impl=False):
                     include_dirs=['amazon/ion', 'ion-c/ionc/include/ionc', 'ion-c/ionc/include',
                                   'ion-c/decNumber/include/decNumber', 'ion-c/decNumber/include'],
                     libraries=['ionc', 'decNumber'],
-                    library_dirs=['ion-c/build/release/ionc', 'ion-c/build/release/decNumber'],
+                    library_dirs=['ion-c/build/release/ionc', 'ion-c/build/release/decNumber',
+                                  'ion-c/ionc/Release', 'ion-c/decNumber/Release'],
                     extra_link_args=['-Wl,-rpath,ion-c/build/release/ionc'],
                 ),
             ],
@@ -48,7 +58,7 @@ def run_setup(force_python_impl=False):
 
     setup(
         name='amazon.ion',
-        version='0.7.0',
+        version='0.7.22',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',
@@ -69,6 +79,7 @@ def run_setup(force_python_impl=False):
         tests_require=[
             'pytest',
         ],
+        cmdclass={'install': CustomInstall},
         **kw
     )
 
