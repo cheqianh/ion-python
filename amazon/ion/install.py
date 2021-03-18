@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import os
 import platform
+import shutil
 import sys
 from subprocess import call, Popen, PIPE, check_call
 from os.path import join, abspath, isdir, dirname
@@ -78,18 +79,23 @@ def _link_includes(name):
 
 def _download_ionc():
     try:
+        print('000000')
         # Install ion-c
         if not isdir('./ion-c'):
             check_call(['git', 'clone', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
+            print('1111111')
         os.chdir('ion-c/')
         # Initialize submodule
         check_call(['git', 'submodule', 'update', '--init'])
+        print('222222222')
         # Builds ion-c
         if _WIN:
             _build_ionc_win()
         elif _MAC:
             _build_ionc_mac()
+            print('33333333')
         os.chdir('../')
+        shutil.move('./ion-c', './amazon/ion/')
     except:
         print('ionc build error: Unable to build ion-c library.')
 

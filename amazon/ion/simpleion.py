@@ -19,6 +19,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 from datetime import datetime
 from decimal import Decimal
 from io import BytesIO, TextIOBase
@@ -45,6 +46,9 @@ try:
     import amazon.ion.ionc as ionc
 except ModuleNotFoundError:
     c_ext = False
+# Used for locate where to put ion-c dependency
+_FILE_PATH = os.path.realpath(__file__)
+
 
 _ION_CONTAINER_END_EVENT = IonEvent(IonEventType.CONTAINER_END)
 _IVM = b'\xe0\x01\x00\xea'
