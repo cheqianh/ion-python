@@ -83,6 +83,7 @@ def _download_ionc():
         # Install ion-c
         if not isdir('./ion-c'):
             check_call(['git', 'clone', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
+            # check_call(['git', 'pull', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
             print('1111111')
         os.chdir('ion-c/')
         # Initialize submodule
@@ -95,7 +96,10 @@ def _download_ionc():
             _build_ionc_mac()
             print('33333333')
         os.chdir('../')
-        shutil.move('./ion-c', './amazon/ion/')
+        print('4444444')
+        check_call(['ls'])
+        # shutil.move('ion-c', 'amazon/ion/')
+        print('55555555')
     except:
         print('ionc build error: Unable to build ion-c library.')
 

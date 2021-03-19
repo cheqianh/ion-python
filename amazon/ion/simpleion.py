@@ -47,7 +47,7 @@ try:
 except ModuleNotFoundError:
     c_ext = False
 # Used for locate where to put ion-c dependency
-_FILE_PATH = os.path.realpath(__file__)
+_FILE_PATH = os.path.abspath(__file__)
 
 
 _ION_CONTAINER_END_EVENT = IonEvent(IonEventType.CONTAINER_END)
