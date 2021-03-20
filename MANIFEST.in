@@ -1,7 +1,5 @@
 include LICENSE NOTICE *.md
 recursive-include tests *.py
 graft vectors
-graft ion-c
 global-exclude *.pyc
 global-exclude .git*
-include amazon/ion/*.h

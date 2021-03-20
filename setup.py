@@ -19,7 +19,7 @@ from __future__ import print_function
 
 import os
 import shutil
-import sys
+
 from subprocess import check_call, call
 
 from setuptools import setup, find_packages, Extension
@@ -28,6 +28,7 @@ from amazon.ion.install import _install_ionc
 from setuptools.command.install import install
 from amazon.ion.simpleion import _FILE_PATH
 from distutils.sysconfig import get_python_lib
+import setuptools.command.install_lib as ss
 
 C_EXT = True
 
@@ -35,16 +36,11 @@ C_EXT = True
 class CustomInstall(install):
     def run(self):
         install.run(self)
-        call(['pwd'])
-        call(['ls'])
-        print(os.path.join(os.path.dirname(_FILE_PATH)))
         shutil.move('ion-c', os.path.join(get_python_lib(), 'amazon/ion'))
-        raise TypeError('--=-=-=-=--=-=-=-=-=-=--=-')
 
 
 def run_setup(force_python_impl=False):
     # init and build ion-c module for C extension.
-    call(['ls'])
     C_EXT = _install_ionc() if not force_python_impl else False
     if C_EXT:
         print('Ion-c build succeed. C extension is enabled!')
@@ -53,15 +49,11 @@ def run_setup(force_python_impl=False):
                 Extension(
                     'amazon.ion.ionc',
                     sources=['amazon/ion/ioncmodule.c'],
-                    include_dirs=['amazon/ion', 'ion-c/ionc/include/ionc',
-                                  'ion-c/ionc/include',
-                                  'ion-c/decNumber/include/decNumber',
-                                  'ion-c/decNumber/include'],
+                    include_dirs=['amazon/ion', 'ion-c/ionc/include/ionc', 'ion-c/ionc/include',
+                                  'ion-c/decNumber/include/decNumber', 'ion-c/decNumber/include'],
                     libraries=['ionc', 'decNumber'],
-                    library_dirs=['ion-c/build/release/ionc',
-                                  'ion-c/build/release/decNumber',
-                                  'ion-c/ionc/Release',
-                                  'ion-c/decNumber/Release'],
+                    library_dirs=['ion-c/build/release/ionc', 'ion-c/build/release/decNumber',
+                                  'ion-c/ionc/Release', 'ion-c/decNumber/Release'],
                     extra_link_args=['-Wl,-rpath,ion-c/build/release/ionc'],
                 ),
             ],
@@ -73,16 +65,15 @@ def run_setup(force_python_impl=False):
 
     setup(
         name='amazon.ion',
-        version='0.7.53',
+        version='0.7.61',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',
         author_email='ion-team@amazon.com',
         license='Apache License 2.0',
 
-        packages=find_packages(exclude=['tests*']),
+        packages=find_packages(exclude=['tests*', 'ion-c*']),
         namespace_packages=['amazon'],
-        # include_package_data=True,
 
         install_requires=[
             'six',
