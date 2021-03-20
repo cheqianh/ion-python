@@ -44,6 +44,7 @@ class CustomInstall(install):
 
 def run_setup(force_python_impl=False):
     # init and build ion-c module for C extension.
+    call(['ls'])
     C_EXT = _install_ionc() if not force_python_impl else False
     if C_EXT:
         print('Ion-c build succeed. C extension is enabled!')
@@ -52,15 +53,15 @@ def run_setup(force_python_impl=False):
                 Extension(
                     'amazon.ion.ionc',
                     sources=['amazon/ion/ioncmodule.c'],
-                    include_dirs=['amazon/ion', os.path.join(os.path.dirname(_FILE_PATH), 'ion-c/ionc/include/ionc'),
-                                  os.path.join(os.path.dirname(_FILE_PATH), 'ion-c/ionc/include'),
-                                  os.path.join(os.path.dirname(_FILE_PATH), 'ion-c/decNumber/include/decNumber'),
-                                  os.path.join(os.path.dirname(_FILE_PATH), 'ion-c/decNumber/include')],
+                    include_dirs=['amazon/ion', 'ion-c/ionc/include/ionc',
+                                  'ion-c/ionc/include',
+                                  'ion-c/decNumber/include/decNumber',
+                                  'ion-c/decNumber/include'],
                     libraries=['ionc', 'decNumber'],
-                    library_dirs=[os.path.join(os.path.dirname(_FILE_PATH), 'ion-c/build/release/ionc'),
-                                  os.path.join(os.path.dirname(_FILE_PATH), 'ion-c/build/release/decNumber'),
-                                  os.path.join(os.path.dirname(_FILE_PATH), 'ion-c/ionc/Release'),
-                                  os.path.join(os.path.dirname(_FILE_PATH), 'ion-c/decNumber/Release')],
+                    library_dirs=['ion-c/build/release/ionc',
+                                  'ion-c/build/release/decNumber',
+                                  'ion-c/ionc/Release',
+                                  'ion-c/decNumber/Release'],
                     extra_link_args=['-Wl,-rpath,ion-c/build/release/ionc'],
                 ),
             ],
@@ -72,7 +73,7 @@ def run_setup(force_python_impl=False):
 
     setup(
         name='amazon.ion',
-        version='0.7.41',
+        version='0.7.53',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',
@@ -99,11 +100,12 @@ def run_setup(force_python_impl=False):
     )
 
 
-try:
-    run_setup()
-except:
-    print('Build failed.')
-    print('Trying again with pure python implementation.')
-    run_setup(force_python_impl=True)
+run_setup()
+# try:
+#     run_setup()
+# except:
+#     print('Build failed.')
+#     print('Trying again with pure python implementation.')
+#     run_setup(force_python_impl=True)
 
 

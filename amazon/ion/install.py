@@ -58,12 +58,13 @@ def _library_exists_win():
 
 
 def _library_exists_mac(name):
-    proc = Popen(['ld', '-l%s' % name], stderr=PIPE, stdout=PIPE)
-    stdout, stderr = proc.communicate()
-    return (b'library not found' not in stdout and
-            b'library not found' not in stderr and
-            os.path.exists('ion-c/build/release/ionc') and
-            os.path.exists('ion-c/build/release/decNumber'))
+    # proc = Popen(['ld', '-l%s' % name], stderr=PIPE, stdout=PIPE)
+    # stdout, stderr = proc.communicate()
+    # return (b'library not found' not in stdout and
+    #         b'library not found' not in stderr and
+    #         os.path.exists('ion-c/build/release/ionc') and
+    #         os.path.exists('ion-c/build/release/decNumber'))
+    return os.path.exists('ion-c/build/release/%s' % name)
 
 
 def _link_library(name):
@@ -79,27 +80,18 @@ def _link_includes(name):
 
 def _download_ionc():
     try:
-        print('000000')
         # Install ion-c
         if not isdir('./ion-c'):
             check_call(['git', 'clone', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
-            # check_call(['git', 'pull', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
-            print('1111111')
         os.chdir('ion-c/')
         # Initialize submodule
         check_call(['git', 'submodule', 'update', '--init'])
-        print('222222222')
         # Builds ion-c
         if _WIN:
             _build_ionc_win()
         elif _MAC:
             _build_ionc_mac()
-            print('33333333')
         os.chdir('../')
-        print('4444444')
-        check_call(['ls'])
-        # shutil.move('ion-c', 'amazon/ion/')
-        print('55555555')
     except:
         print('ionc build error: Unable to build ion-c library.')
 
