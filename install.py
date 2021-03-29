@@ -67,12 +67,6 @@ def _library_exists_win():
 
 
 def _library_exists_mac(name):
-    # proc = Popen(['ld', '-l%s' % name], stderr=PIPE, stdout=PIPE)
-    # stdout, stderr = proc.communicate()
-    # return (b'library not found' not in stdout and
-    #         b'library not found' not in stderr and
-    #         os.path.exists('ion-c/build/release/ionc') and
-    #         os.path.exists('ion-c/build/release/decNumber'))
     return os.path.exists(join(_C_EXT_DEPENDENCY_LIB_LOCATION, _get_lib_name(name)))
 
 
@@ -101,7 +95,8 @@ def _download_ionc():
 
         # Initialize submodule
         check_call(['git', 'submodule', 'update', '--init'])
-        # Builds ion-c
+
+        # Build ion-c
         if _WIN:
             _build_ionc_win()
         elif _MAC:
