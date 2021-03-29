@@ -29,9 +29,10 @@ _OS = platform.system()
 _WIN = _OS == 'Windows'
 _MAC = _OS == 'Darwin'
 
-_C_EXT_DEPENDENCY_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'c_ext_dependency'))
+_C_EXT_DEPENDENCY_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c-build'))
 _C_EXT_DEPENDENCY_LIB_LOCATION = abspath(join(_C_EXT_DEPENDENCY_DIR, 'lib'))
 _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS = abspath(join(_C_EXT_DEPENDENCY_DIR, 'include'))
+
 _IONC_REPO_URL = "https://github.com/amzn/ion-c.git"
 _IONC_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c'))
 _IONC_LOCATION = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'build', 'release'))
@@ -88,10 +89,10 @@ def _link_includes(name):
 def _download_ionc():
     try:
         # Create directory to store build output
-        if not isdir('./c_ext_dependency'):
-            os.mkdir('./c_ext_dependency')
-            os.mkdir('./c_ext_dependency/lib')
-            os.mkdir('./c_ext_dependency/include')
+        if not isdir(_C_EXT_DEPENDENCY_DIR):
+            os.mkdir(_C_EXT_DEPENDENCY_DIR)
+            os.mkdir(_C_EXT_DEPENDENCY_LIB_LOCATION)
+            os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
         # Install ion-c
         if not isdir('./ion-c'):
@@ -107,10 +108,10 @@ def _download_ionc():
             _build_ionc_mac()
         os.chdir('../')
     except:
-        # if isdir(_C_EXT_DEPENDENCY_DIR):
-        #     shutil.rmtree(_C_EXT_DEPENDENCY_DIR)
-        # if isdir(_IONC_DIR):
-        #     shutil.rmtree(_IONC_DIR)
+        if isdir(_C_EXT_DEPENDENCY_DIR):
+            shutil.rmtree(_C_EXT_DEPENDENCY_DIR)
+        if isdir(_IONC_DIR):
+            shutil.rmtree(_IONC_DIR)
         print('ionc build error: Unable to build ion-c library.')
         return False
 
@@ -137,7 +138,6 @@ def _build_ionc_mac():
     _link_includes('ionc')
     _link_library('decNumber')
     _link_includes('decNumber')
-
 
 
 def _build_ionc_win():

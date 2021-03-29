@@ -24,7 +24,7 @@ from subprocess import check_call, call
 
 from setuptools import setup, find_packages, Extension
 
-from install import _install_ionc
+from install import _install_ionc, _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, _C_EXT_DEPENDENCY_LIB_LOCATION
 from setuptools.command.install import install
 from distutils.sysconfig import get_python_lib
 import setuptools.command.install_lib as ss
@@ -45,6 +45,7 @@ def run_setup(force_python_impl=False):
     # C_EXT = _install_ionc() if not force_python_impl else False
     global C_EXT
     C_EXT = True
+    print(os.path.join(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, 'ionc'))
     if C_EXT:
         print('Ion-c build succeed. C extension is enabled!')
         kw = dict(
@@ -52,21 +53,30 @@ def run_setup(force_python_impl=False):
                 Extension(
                     'amazon.ion.ionc',
                     sources=['amazon/ion/ioncmodule.c'],
-                    include_dirs=['ion-c/ionc/include/ionc', 'ion-c/ionc/include',
-                                  'ion-c/decNumber/include/decNumber', 'ion-c/decNumber/include',
-                                  os.path.join(get_python_lib(), 'ion-c/ionc/include/ionc'),
+                    include_dirs=[
+                                  # Mac
+                                  os.path.join(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS),
+                                  os.path.join(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, 'ionc'),
+                                  os.path.join(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, 'decNumber'),
+                                  os.path.join(get_python_lib(), _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS),
+                                  os.path.join(get_python_lib(), _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, 'ionc'),
+                                  os.path.join(get_python_lib(), _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, 'decNumber'),
+                                  # Windows
+                                  'ion-c/ionc/include',
+                                  'ion-c/decNumber/include',
                                   os.path.join(get_python_lib(), 'ion-c/ionc/include'),
-                                  os.path.join(get_python_lib(), 'ion-c/decNumber/include/decNumber'),
                                   os.path.join(get_python_lib(), 'ion-c/decNumber/include')],
                     libraries=['ionc', 'decNumber'],
-                    library_dirs=['ion-c/build/release/ionc', 'ion-c/build/release/decNumber',
+                    library_dirs=[
+                                  # Mac
+                                  _C_EXT_DEPENDENCY_LIB_LOCATION,
+                                  os.path.join(get_python_lib(), _C_EXT_DEPENDENCY_LIB_LOCATION),
+                                  # Windows
                                   'ion-c/ionc/Release', 'ion-c/decNumber/Release',
-                                  os.path.join(get_python_lib(), 'ion-c/build/release/ionc'),
-                                  os.path.join(get_python_lib(), 'ion-c/build/release/decNumber'),
                                   os.path.join(get_python_lib(), 'ion-c/ionc/Release'),
                                   os.path.join(get_python_lib(), 'ion-c/decNumber/Release')],
-                    extra_link_args=['-Wl,-rpath,ion-c/build/release/ionc',
-                                     '-Wl,-rpath,%s' % os.path.join(get_python_lib(), 'ion-c/build/release/ionc')],
+                    extra_link_args=['-Wl,-rpath,%s' % _C_EXT_DEPENDENCY_LIB_LOCATION,
+                                     '-Wl,-rpath,%s' % os.path.join(get_python_lib(), _C_EXT_DEPENDENCY_LIB_LOCATION)],
                 ),
             ],
         )

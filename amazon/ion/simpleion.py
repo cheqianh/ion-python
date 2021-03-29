@@ -372,8 +372,10 @@ def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object
             A sequence of Python objects representing a stream of Ion values.
     """
     if not force_python_impl and c_ext and catalog is None:
+        print('c is on')
         return load_extension(fp, single_value=single_value, encoding='utf-8', **kw)
     else:
+        print('python is on')
         if isinstance(fp, _TEXT_TYPES):
             raw_reader = text_reader(is_unicode=True)
         else:
