@@ -24,7 +24,7 @@ from subprocess import check_call, call
 
 from setuptools import setup, find_packages, Extension
 
-from amazon.ion.install import _install_ionc
+from install import _install_ionc
 from setuptools.command.install import install
 from distutils.sysconfig import get_python_lib
 import setuptools.command.install_lib as ss
@@ -42,7 +42,9 @@ class CustomInstall(install):
 
 def run_setup(force_python_impl=False):
     # init and build ion-c module for C extension.
-    C_EXT = _install_ionc() if not force_python_impl else False
+    # C_EXT = _install_ionc() if not force_python_impl else False
+    global C_EXT
+    C_EXT = True
     if C_EXT:
         print('Ion-c build succeed. C extension is enabled!')
         kw = dict(
