@@ -134,6 +134,8 @@ def _build_ionc_mac():
     _link_library('decNumber')
     # _link_includes('decNumber')
 
+
+
     # move ion-c-build inside amazon/ion for distribution
     target_path = abspath(join(dirname(os.path.abspath(__file__)), '../amazon/ion/ion-c-build'))
     if os.path.isdir(target_path):
