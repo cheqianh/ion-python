@@ -73,11 +73,11 @@ def _library_exists_mac(name):
 def _link_library(name):
     call(['ln', '-s', join(_C_EXT_DEPENDENCY_LIB_LOCATION, _get_lib_name(name)), join(_USERLIB_LOCATION, _get_lib_name(name))])
 
-
-def _link_includes(name):
-    includes_dir = join(_USERINCLUDE_LOCATION, name)
-    if not isdir(includes_dir):
-        call(['ln', '-s', join(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, name), includes_dir])
+# TODO this method is prob not necessary
+# def _link_includes(name):
+#     includes_dir = join(_USERINCLUDE_LOCATION, name)
+#     if not isdir(includes_dir):
+#         call(['ln', '-s', join(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, name), includes_dir])
 
 
 def _download_ionc():
@@ -130,9 +130,15 @@ def _build_ionc_mac():
     _move_lib_mac('decNumber')
     # link libraries to known place
     _link_library('ionc')
-    _link_includes('ionc')
+    # _link_includes('ionc')
     _link_library('decNumber')
-    _link_includes('decNumber')
+    # _link_includes('decNumber')
+
+    # move ion-c-build inside amazon/ion for distribution
+    target_path = abspath(join(dirname(os.path.abspath(__file__)), '../amazon/ion/ion-c-build'))
+    if os.path.isdir(target_path):
+        shutil.rmtree(target_path)
+    shutil.copytree(_C_EXT_DEPENDENCY_DIR, target_path)
 
 
 def _build_ionc_win():
