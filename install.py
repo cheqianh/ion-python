@@ -21,7 +21,7 @@ import os
 import platform
 import shutil
 import sys
-from subprocess import call, Popen, PIPE, check_call
+from subprocess import check_call
 from os.path import join, abspath, isdir, dirname
 
 _PYPY = hasattr(sys, 'pypy_translation_info')
@@ -87,11 +87,10 @@ def _download_ionc():
         check_call(['git', 'submodule', 'update', '--init'])
 
         # Build ion-c
-        if _WIN:
-            _build_ionc_win()
-        elif _MAC:
-            _build_ionc_mac()
+        _build_ionc()
+
         os.chdir('../')
+        move_build_lib_for_distribution()
     except:
         if isdir(_C_EXT_DEPENDENCY_DIR):
             shutil.rmtree(_C_EXT_DEPENDENCY_DIR)
@@ -101,7 +100,17 @@ def _download_ionc():
         return False
 
 
+def _build_ionc():
+    if _WIN:
+        _build_ionc_win()
+    elif _MAC:
+        _build_ionc_mac()
+
+
 def _move_lib_mac(name):
+    """
+    Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
+    """
     shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
     dir_path = join(_IONC_LOCATION, name)
@@ -119,17 +128,20 @@ def _build_ionc_mac():
     _move_lib_mac('ionc')
     _move_lib_mac('decNumber')
 
-    # move ion-c-build inside amazon/ion for distribution
-    target_path = abspath(join(dirname(os.path.abspath(__file__)), '../amazon/ion/ion-c-build'))
-    if os.path.isdir(target_path):
-        shutil.rmtree(target_path)
-    shutil.copytree(_C_EXT_DEPENDENCY_DIR, target_path)
-
 
 def _build_ionc_win():
     # check_call('cmake -G \"Visual Studio 15 2017 Win64\"')
     check_call('cmake -G \"Visual Studio 16 2019\"')
     check_call('cmake --build . --config Release')
+
+
+def move_build_lib_for_distribution():
+    # move ion-c-build inside amazon/ion for distribution
+    target_path = abspath(join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build'))
+    print(target_path)
+    if os.path.isdir(target_path):
+        shutil.rmtree(target_path)
+    shutil.copytree(_C_EXT_DEPENDENCY_DIR, target_path)
 
 
 def _check_dependencies():

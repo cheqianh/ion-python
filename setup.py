@@ -18,48 +18,49 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import shutil
+from os.path import dirname, join
 
-from subprocess import check_call, call
+from subprocess import call
 import platform
 
 from setuptools import setup, find_packages, Extension
 
-from install import _install_ionc, _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS, _C_EXT_DEPENDENCY_LIB_LOCATION
 from setuptools.command.install import install
-from distutils.sysconfig import get_python_lib
-import setuptools.command.install_lib as ss
 
 C_EXT = True
 _OS = platform.system()
 _WIN = _OS == 'Windows'
 _MAC = _OS == 'Darwin'
+_BDIST = 'bdist'
+_SHARED_OBJECT_SUFFIX = '.so'
+_IONC_LIB_LOCATION = join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build/lib')
+
+
+def change_c_extension_lib_path():
+    """
+    Change C extension (.so)'s dependency search path to relative path (@loader_path)
+    """
+    dir_path = join(dirname(os.path.abspath(__file__)), 'build')
+    for folder in os.listdir(dir_path):
+        if folder[:5] == 'bdist':
+            lib_dir = os.path.join(dir_path, folder, "wheel/amazon/ion/")
+            for file in os.listdir(lib_dir):
+                if file.endswith(_SHARED_OBJECT_SUFFIX):
+                    for lib in os.listdir(_IONC_LIB_LOCATION):
+                        call(['install_name_tool', '-change', '@rpath/%s' % lib,
+                              '@loader_path/ion-c-build/lib/%s' % lib, os.path.join(lib_dir, file)])
 
 
 class CustomInstall(install):
     def run(self):
         install.run(self)
         if _MAC:
-            # Change C extension's dependency path to relative path of the loader (.so)
-            file_path = ''
-            lib_path = ''
-            dir_path = 'build'
-            for file in os.listdir(dir_path):
-                if file[:5] == 'bdist':
-                    file_path = os.path.join(dir_path, file)
-            lib_dir = os.path.join(file_path, "wheel/amazon/ion/")
-            for file in os.listdir(lib_dir):
-                if file.endswith('.so'):
-                    lib_path = os.path.join(lib_dir, file)
-            call(['install_name_tool', '-change', '@rpath/libionc.1.0.3.dylib',
-                  '@loader_path/ion-c-build/lib/libionc.dylib', lib_path])
-            call(['install_name_tool', '-change', '@rpath/libdecNumber.dylib',
-                  '@loader_path/ion-c-build/lib/libdecNumber.dylib', lib_path])
+            change_c_extension_lib_path()
 
 
-def run_setup(force_python_impl=False):
+def run_setup():
     if C_EXT:
-        print('Ion-c build succeed. C extension is enabled!')
+        print('C extension is enabled!')
         kw = dict(
             ext_modules=[
                 Extension(
@@ -73,7 +74,7 @@ def run_setup(force_python_impl=False):
                                   # Windows
                                   # 'ion-c/ionc/include',
                                   # 'ion-c/decNumber/include'
-                        ],
+                    ],
                     libraries=['ionc', 'decNumber'],
                     library_dirs=[
                                   # Mac
@@ -92,7 +93,7 @@ def run_setup(force_python_impl=False):
 
     setup(
         name='amazon.ion',
-        version='0.7.89',
+        version='0.7.92',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',
@@ -120,11 +121,3 @@ def run_setup(force_python_impl=False):
 
 
 run_setup()
-# try:
-#     run_setup()
-# except:
-#     print('Build failed.')
-#     print('Trying again with pure python implementation.')
-#     run_setup(force_python_impl=True)
-
-
