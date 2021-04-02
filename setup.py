@@ -30,42 +30,34 @@ from setuptools.command.install import install
 from distutils.sysconfig import get_python_lib
 import setuptools.command.install_lib as ss
 
+C_EXT = True
 _OS = platform.system()
 _WIN = _OS == 'Windows'
 _MAC = _OS == 'Darwin'
-C_EXT = True
 
 
 class CustomInstall(install):
     def run(self):
         install.run(self)
-        print('-------------------------=-==-=-=-==-=-')
         if _MAC:
-            call(['ls'])
+            # Change C extension's dependency path to relative path of the loader (.so)
             file_path = ''
             lib_path = ''
             dir_path = 'build'
             for file in os.listdir(dir_path):
                 if file[:5] == 'bdist':
-                    print('file is: %s' % file)
                     file_path = os.path.join(dir_path, file)
-            print('file_path is: %s' % file_path)
             lib_dir = os.path.join(file_path, "wheel/amazon/ion/")
             for file in os.listdir(lib_dir):
                 if file.endswith('.so'):
                     lib_path = os.path.join(lib_dir, file)
-            print('lib_path: %s' % lib_path)
             call(['install_name_tool', '-change', '@rpath/libionc.1.0.3.dylib',
                   '@loader_path/ion-c-build/lib/libionc.dylib', lib_path])
             call(['install_name_tool', '-change', '@rpath/libdecNumber.dylib',
                   '@loader_path/ion-c-build/lib/libdecNumber.dylib', lib_path])
 
+
 def run_setup(force_python_impl=False):
-    # init and build ion-c module for C extension.
-    # if os.path.isdir(os.path.join(get_python_lib(), 'amazon/ion/ion-c-build')):
-    #     shutil.rmtree(os.path.join(get_python_lib(), 'amazon/ion/ion-c-build'))
-    # shutil.copytree(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ion-c-build'), os.path.join(get_python_lib(), 'amazon/ion/ion-c-build'))
-    print('hiasfsd---------------fdasfasd')
     if C_EXT:
         print('Ion-c build succeed. C extension is enabled!')
         kw = dict(
@@ -75,28 +67,21 @@ def run_setup(force_python_impl=False):
                     sources=['amazon/ion/ioncmodule.c'],
                     include_dirs=[
                                   # Mac
-                                  'ion-c-build/include',
-                                  'ion-c-build/include/ionc',
-                                  'ion-c-build/include/decNumber',
-                                  os.path.join(get_python_lib(), 'amazon/ion/ion-c-build/include'),
-                                  os.path.join(get_python_lib(), 'amazon/ion/ion-c-build/include', 'ionc'),
-                                  os.path.join(get_python_lib(), 'amazon/ion/ion-c-build/include', 'decNumber'),
+                                  'amazon/ion/ion-c-build/include',
+                                  'amazon/ion/ion-c-build/include/ionc',
+                                  'amazon/ion/ion-c-build/include/decNumber',
                                   # Windows
-                                  'ion-c/ionc/include',
-                                  'ion-c/decNumber/include',
-                                  os.path.join(get_python_lib(), 'ion-c/ionc/include'),
-                                  os.path.join(get_python_lib(), 'ion-c/decNumber/include')],
+                                  # 'ion-c/ionc/include',
+                                  # 'ion-c/decNumber/include'
+                        ],
                     libraries=['ionc', 'decNumber'],
-                    # runtime_library_dirs=['amazon/ion/ion-c-build/lib'],
                     library_dirs=[
                                   # Mac
-                                  'ion-c-build/lib',
-                                  os.path.join(get_python_lib(), 'amazon/ion/ion-c-build/lib'),
+                                  'amazon/ion/ion-c-build/lib',
                                   # Windows
-                                  'ion-c/ionc/Release', 'ion-c/decNumber/Release',
-                                  os.path.join(get_python_lib(), 'ion-c/ionc/Release'),
-                                  os.path.join(get_python_lib(), 'ion-c/decNumber/Release')],
-                    # extra_link_args=['-Wl,-rpath,%s' % 'amazon/ion/ion-c-build/lib'],
+                                  # 'ion-c/ionc/Release', 'ion-c/decNumber/Release'
+                    ],
+                    extra_link_args=['-Wl,-rpath,%s' % 'amazon/ion/ion-c-build/lib'],   # Used for Dev
                 ),
             ],
         )
@@ -107,7 +92,7 @@ def run_setup(force_python_impl=False):
 
     setup(
         name='amazon.ion',
-        version='0.7.86',
+        version='0.7.89',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',
