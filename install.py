@@ -107,17 +107,25 @@ def _build_ionc():
         _build_ionc_mac()
 
 
-def _move_lib_mac(name):
+def _build_ionc_win():
+    # check_call('cmake -G \"Visual Studio 15 2017 Win64\"')
+    check_call('cmake -G \"Visual Studio 16 2019\"')
+    check_call('cmake --build . --config Release')
+
+    # move ion-c to output dir
+    _move_lib_win('ionc')
+    _move_lib_win('decNumber')
+
+
+def _move_lib_win(name):
     """
     Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
     """
     shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
-    dir_path = join(_IONC_LOCATION, name)
-    for file in os.listdir(dir_path):
-        file_path = join(dir_path, file)
-        if file.endswith(_LIB_SUFFIX):
-            shutil.move(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
+    lib_path = join(_IONC_DIR, name, 'Release', '%s.lib' % name)
+    shutil.move(lib_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
+
 
 
 def _build_ionc_mac():
@@ -129,10 +137,17 @@ def _build_ionc_mac():
     _move_lib_mac('decNumber')
 
 
-def _build_ionc_win():
-    # check_call('cmake -G \"Visual Studio 15 2017 Win64\"')
-    check_call('cmake -G \"Visual Studio 16 2019\"')
-    check_call('cmake --build . --config Release')
+def _move_lib_mac(name):
+    """
+    Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
+    """
+    shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+
+    dir_path = join(_IONC_LOCATION, name)
+    for file in os.listdir(dir_path):
+        file_path = join(dir_path, file)
+        if file.endswith(_LIB_SUFFIX):
+            shutil.move(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
 
 
 def move_build_lib_for_distribution():
