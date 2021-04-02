@@ -66,21 +66,12 @@ def run_setup():
                 Extension(
                     'amazon.ion.ionc',
                     sources=['amazon/ion/ioncmodule.c'],
-                    include_dirs=[
-                                  # Mac
-                                  'amazon/ion/ion-c-build/include',
+                    include_dirs=['amazon/ion/ion-c-build/include',
                                   'amazon/ion/ion-c-build/include/ionc',
                                   'amazon/ion/ion-c-build/include/decNumber',
-                                  # Windows
-                                  # 'ion-c/ionc/include',
-                                  # 'ion-c/decNumber/include'
                     ],
                     libraries=['ionc', 'decNumber'],
-                    library_dirs=[
-                                  # Mac
-                                  'amazon/ion/ion-c-build/lib',
-                                  # Windows
-                                  # 'ion-c/ionc/Release', 'ion-c/decNumber/Release'
+                    library_dirs=['amazon/ion/ion-c-build/lib',
                     ],
                     extra_link_args=['-Wl,-rpath,%s' % 'amazon/ion/ion-c-build/lib'],   # Used for Dev
                 ),
