@@ -178,11 +178,10 @@ def _install_ionc():
         return False
 
     if not _library_exists():
+        print('ion-c not found, installing ion-c...')
         if not _download_ionc():
             return False
 
     return True
 
 
-if __name__ == "__main__":
-    res = _install_ionc()

@@ -36,5 +36,4 @@ __all__ = [
     'writer_binary_raw_fields',
     'writer_buffer',
     'writer_text',
-    'install',
 ]
