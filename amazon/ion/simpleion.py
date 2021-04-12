@@ -56,7 +56,7 @@ def dump_original(obj, fp, imports=None, binary=True, sequence_as_stream=False, 
          check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, encoding='utf-8', default=None,
          use_decimal=True, namedtuple_as_object=True, tuple_as_array=True, bigint_as_string=False, sort_keys=False,
          item_sort_key=None, for_json=None, ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False,
-         tuple_as_sexp=False, omit_version_marker=False, force_python_impl=False, **kw):
+         tuple_as_sexp=False, omit_version_marker=False, **kw):
     """Serialize ``obj`` as an Ion-formatted stream to ``fp`` (a file-like object), using the following conversion
     table::
         +-------------------+-------------------+
@@ -147,8 +147,6 @@ def dump_original(obj, fp, imports=None, binary=True, sequence_as_stream=False, 
             When False, all tuple values will be written as Ion lists. Default: False.
         omit_version_marker (Optional|True|False): If binary is False and omit_version_marker is True, omits the
             Ion Version Marker ($ion_1_0) from the output.  Default: False.
-        force_python_impl (Optional[True|False]) When True, will run the pure python implementation no matter if
-            C extension is enabled.   Default: False.
         **kw: NOT IMPLEMENTED
 
     """
@@ -245,7 +243,7 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
           allow_nan=True, cls=None, indent=None, separators=None, encoding='utf-8', default=None, use_decimal=True,
           namedtuple_as_object=True, tuple_as_array=True, bigint_as_string=False, sort_keys=False, item_sort_key=None,
           for_json=None, ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False, tuple_as_sexp=False,
-          omit_version_marker=False, force_python_impl=False, **kw):
+          omit_version_marker=False, **kw):
     """Serialize ``obj`` as Python ``string`` or ``bytes`` object, using the conversion table used by ``dump`` (above).
 
     Args:
@@ -282,8 +280,6 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
             When False, all tuple values will be written as Ion lists. Default: False.
         omit_version_marker (Optional|True|False): If binary is False and omit_version_marker is True, omits the
             Ion Version Marker ($ion_1_0) from the output.  Default: False.
-        force_python_impl (Optional[True|False]) When True, will run the pure python implementation no matter if
-            C extension is enabled.   Default: False.
         **kw: NOT IMPLEMENTED
 
     Returns:
@@ -298,7 +294,7 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
          use_decimal=use_decimal, namedtuple_as_object=namedtuple_as_object, tuple_as_array=tuple_as_array,
          bigint_as_string=bigint_as_string, sort_keys=sort_keys, item_sort_key=item_sort_key, for_json=for_json,
          ignore_nan=ignore_nan, int_as_string_bitcount=int_as_string_bitcount, iterable_as_array=iterable_as_array,
-         tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, force_python_impl=force_python_impl, **kw)
+         tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, **kw)
 
     ret_val = ion_buffer.getvalue()
     ion_buffer.close()
@@ -308,7 +304,7 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
 
 
 def load_original(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
-         parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, force_python_impl=False, **kw):
+         parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
     """Deserialize ``fp`` (a file-like object), which contains a text or binary Ion stream, to a Python object using the
     following conversion table::
         +-------------------+-------------------+
@@ -356,8 +352,6 @@ def load_original(fp, catalog=None, single_value=True, encoding='utf-8', cls=Non
         parse_constant: NOT IMPLEMENTED
         object_pairs_hook: NOT IMPLEMENTED
         use_decimal: NOT IMPLEMENTED
-        force_python_impl (Optional[True|False]) When True, will run the pure python implementation no matter if
-            C extension is enabled.   Default: False.
         **kw: NOT IMPLEMENTED
 
     Returns (Any):
@@ -427,7 +421,7 @@ def _load(out, reader, end_type=IonEventType.STREAM_END, in_struct=False):
 
 
 def loads(ion_str, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
-          parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, force_python_impl=False, **kw):
+          parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
     """Deserialize ``ion_str``, which is a string representation of an Ion object, to a Python object using the
     conversion table used by load (above).
 
@@ -446,8 +440,6 @@ def loads(ion_str, catalog=None, single_value=True, encoding='utf-8', cls=None, 
         parse_constant: NOT IMPLEMENTED
         object_pairs_hook: NOT IMPLEMENTED
         use_decimal: NOT IMPLEMENTED
-        force_python_impl (Optional[True|False]) When True, will run the pure python implementation no matter if
-            C extension is enabled.   Default: False.
         **kw: NOT IMPLEMENTED
 
     Returns (Any):
@@ -466,7 +458,7 @@ def loads(ion_str, catalog=None, single_value=True, encoding='utf-8', cls=None, 
 
     return load(ion_buffer, catalog=catalog, single_value=single_value, encoding=encoding, cls=cls,
                 object_hook=object_hook, parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant,
-                object_pairs_hook=object_pairs_hook, use_decimal=use_decimal, force_python_impl=force_python_impl)
+                object_pairs_hook=object_pairs_hook, use_decimal=use_decimal)
 
 
 def dump_extension(obj, fp, binary=True, sequence_as_stream=False, tuple_as_sexp=False, omit_version_marker=False):
@@ -489,8 +481,8 @@ def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=
          check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, encoding='utf-8', default=None,
          use_decimal=True, namedtuple_as_object=True, tuple_as_array=True, bigint_as_string=False, sort_keys=False,
          item_sort_key=None, for_json=None, ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False,
-         tuple_as_sexp=False, omit_version_marker=False, force_python_impl=False, **kw):
-    if not force_python_impl and c_ext and imports is None:
+         tuple_as_sexp=False, omit_version_marker=False, **kw):
+    if c_ext and imports is None:
         return dump_extension(obj, fp, binary=binary, sequence_as_stream=sequence_as_stream,
                               tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker)
     else:
@@ -505,11 +497,11 @@ def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=
 
 
 def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
-         parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, force_python_impl=False, **kw):
-    if not force_python_impl and c_ext and catalog is None:
+         parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
+    if c_ext and catalog is None:
         return load_extension(fp, single_value=single_value, encoding=encoding)
     else:
-        return load_original(fp, catalog=catalog, single_value=single_value, encoding=encoding, cls=cls, object_hook=object_hook,
-                             parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant,
-                             object_pairs_hook=object_pairs_hook, use_decimal=use_decimal, force_python_impl=force_python_impl,
-                             **kw)
+        return load_original(fp, catalog=catalog, single_value=single_value, encoding=encoding, cls=cls,
+                             object_hook=object_hook, parse_float=parse_float, parse_int=parse_int,
+                             parse_constant=parse_constant, object_pairs_hook=object_pairs_hook,
+                             use_decimal=use_decimal, **kw)
