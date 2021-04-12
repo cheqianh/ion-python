@@ -562,7 +562,7 @@ class PrettyPrintParams(record('ion_text', 'indent', ('exact_text', None), ('reg
         )
 def test_pretty_print(p):
     if c_ext:
-        # TODO Next relase: support pretty print for C extension.
+        # TODO support pretty print for C extension.
         return
     ion_text, indent, exact_text, regexes = p
     ion_value = loads(ion_text)

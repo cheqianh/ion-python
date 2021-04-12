@@ -6,5 +6,3 @@ global-exclude .git*
 recursive-include amazon/ion/ion-c-build *
 include install.py
 include amazon/ion/_ioncmodule.h
-
-

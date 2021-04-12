@@ -464,7 +464,7 @@ def loads(ion_str, catalog=None, single_value=True, encoding='utf-8', cls=None, 
 def dump_extension(obj, fp, binary=True, sequence_as_stream=False, tuple_as_sexp=False, omit_version_marker=False):
     res = ionc.ionc_write(obj, binary, sequence_as_stream, tuple_as_sexp)
 
-    # TODO next_release: support "omit_version_marker" rather than hacking.
+    # TODO support "omit_version_marker" rather than hacking.
     if not binary and not omit_version_marker:
         res = b'$ion_1_0 ' + res
 

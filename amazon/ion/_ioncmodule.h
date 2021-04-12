@@ -11,5 +11,4 @@ PyObject* ionc_read(PyObject* self, PyObject *args, PyObject *kwds);
 iERR ionc_read_all(hREADER hreader, PyObject* container, BOOL in_struct, BOOL emit_bare_values);
 iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_struct, BOOL emit_bare_values);
 
-
 #endif
