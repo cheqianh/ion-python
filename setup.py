@@ -17,38 +17,77 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+from os.path import dirname, join
+
+from subprocess import call
+import platform
+
 from setuptools import setup, find_packages, Extension
+
+from setuptools.command.install import install
 
 from install import _install_ionc
 
-# I/O for C extension.
-c_ext = 1
+C_EXT = True
+_OS = platform.system()
+_WIN = _OS == 'Windows'
+_MAC = _OS == 'Darwin'
+_BDIST = 'bdist'
+_SHARED_OBJECT_SUFFIX = '.so'
+_IONC_LIB_LOCATION = join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build/lib')
 
 
-def run_setup(c_ext):
-    if c_ext:
-        # init and build ion-c module for C extension.
-        _install_ionc()
+def change_c_extension_lib_path():
+    """
+    Change C extension (.so)'s dependency search path to relative path (@loader_path)
+    """
+    dir_path = join(dirname(os.path.abspath(__file__)), 'build')
+    for folder in os.listdir(dir_path):
+        if folder[:5] == 'bdist':
+            lib_dir = os.path.join(dir_path, folder, "wheel/amazon/ion/")
+            for file in os.listdir(lib_dir):
+                if file.endswith(_SHARED_OBJECT_SUFFIX):
+                    for lib in os.listdir(_IONC_LIB_LOCATION):
+                        call(['install_name_tool', '-change', '@rpath/%s' % lib,
+                              '@loader_path/ion-c-build/lib/%s' % lib, os.path.join(lib_dir, file)])
 
+
+class CustomInstall(install):
+    def run(self):
+        install.run(self)
+        if _MAC:
+            change_c_extension_lib_path()
+
+
+def run_setup():
+    _install_ionc()
+    if C_EXT:
+        print('C extension is enabled!')
         kw = dict(
             ext_modules=[
                 Extension(
                     'amazon.ion.ionc',
                     sources=['amazon/ion/ioncmodule.c'],
-                    include_dirs=['amazon/ion', 'ion-c/ionc/include/ionc', 'ion-c/ionc/include',
-                                  'ion-c/decNumber/include/decNumber', 'ion-c/decNumber/include'],
+                    include_dirs=['amazon/ion/ion-c-build/include',
+                                  'amazon/ion/ion-c-build/include/ionc',
+                                  'amazon/ion/ion-c-build/include/decNumber',
+                    ],
                     libraries=['ionc', 'decNumber'],
-                    library_dirs=['ion-c/build/release/ionc', 'ion-c/build/release/decNumber'],
-                    extra_link_args=['-Wl,-rpath,ion-c/build/release/ionc'],
+                    library_dirs=['amazon/ion/ion-c-build/lib',
+                    ],
+                    extra_link_args=['-Wl,-rpath,%s' % 'amazon/ion/ion-c-build/lib'],   # Used for Dev
                 ),
             ],
         )
     else:
+        print('Using pure python implementation.')
         kw = dict()
+
 
     setup(
         name='amazon.ion',
-        version='0.7.0',
+        version='0.7.95',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',
@@ -56,6 +95,7 @@ def run_setup(c_ext):
         license='Apache License 2.0',
 
         packages=find_packages(exclude=['tests*']),
+        include_package_data=True,
         namespace_packages=['amazon'],
 
         install_requires=[
@@ -69,9 +109,9 @@ def run_setup(c_ext):
         tests_require=[
             'pytest',
         ],
+        cmdclass={'install': CustomInstall},
         **kw
     )
 
 
-run_setup(c_ext)
-
+run_setup()

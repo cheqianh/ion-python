@@ -46,16 +46,17 @@ try:
 except ModuleNotFoundError:
     c_ext = False
 
+
 _ION_CONTAINER_END_EVENT = IonEvent(IonEventType.CONTAINER_END)
 _IVM = b'\xe0\x01\x00\xea'
 _TEXT_TYPES = (TextIOBase, six.StringIO)
 
 
-def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=False, ensure_ascii=True,
+def dump_original(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=False, ensure_ascii=True,
          check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, encoding='utf-8', default=None,
          use_decimal=True, namedtuple_as_object=True, tuple_as_array=True, bigint_as_string=False, sort_keys=False,
          item_sort_key=None, for_json=None, ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False,
-         tuple_as_sexp=False, omit_version_marker=False, force_python_impl=False, **kw):
+         tuple_as_sexp=False, omit_version_marker=False, **kw):
     """Serialize ``obj`` as an Ion-formatted stream to ``fp`` (a file-like object), using the following conversion
     table::
         +-------------------+-------------------+
@@ -146,28 +147,22 @@ def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=
             When False, all tuple values will be written as Ion lists. Default: False.
         omit_version_marker (Optional|True|False): If binary is False and omit_version_marker is True, omits the
             Ion Version Marker ($ion_1_0) from the output.  Default: False.
-        force_python_impl (Optional[True|False]) When True, will run the pure python implementation no matter if
-            C extension is enabled.   Default: False.
         **kw: NOT IMPLEMENTED
 
     """
-    if not force_python_impl and c_ext and imports is None:
-        dump_extension(obj, fp, binary=binary, sequence_as_stream=sequence_as_stream, encoding='utf-8',
-                       tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, **kw)
+    raw_writer = binary_writer(imports) if binary else text_writer(indent=indent)
+    writer = blocking_writer(raw_writer, fp)
+    from_type = _FROM_TYPE_TUPLE_AS_SEXP if tuple_as_sexp else _FROM_TYPE
+    if binary or not omit_version_marker:
+        writer.send(ION_VERSION_MARKER_EVENT)  # The IVM is emitted automatically in binary; it's optional in text.
+    if sequence_as_stream and isinstance(obj, (list, tuple)):
+        # Treat this top-level sequence as a stream; serialize its elements as top-level values, but don't serialize the
+        # sequence itself.
+        for top_level in obj:
+            _dump(top_level, writer, from_type)
     else:
-        raw_writer = binary_writer(imports) if binary else text_writer(indent=indent)
-        writer = blocking_writer(raw_writer, fp)
-        from_type = _FROM_TYPE_TUPLE_AS_SEXP if tuple_as_sexp else _FROM_TYPE
-        if binary or not omit_version_marker:
-            writer.send(ION_VERSION_MARKER_EVENT)  # The IVM is emitted automatically in binary; it's optional in text.
-        if sequence_as_stream and isinstance(obj, (list, tuple)):
-            # Treat this top-level sequence as a stream; serialize its elements as top-level values, but don't serialize the
-            # sequence itself.
-            for top_level in obj:
-                _dump(top_level, writer, from_type)
-        else:
-            _dump(obj, writer, from_type)
-        writer.send(ION_STREAM_END_EVENT)
+        _dump(obj, writer, from_type)
+    writer.send(ION_STREAM_END_EVENT)
 
 
 _FROM_TYPE = dict(chain(
@@ -248,7 +243,7 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
           allow_nan=True, cls=None, indent=None, separators=None, encoding='utf-8', default=None, use_decimal=True,
           namedtuple_as_object=True, tuple_as_array=True, bigint_as_string=False, sort_keys=False, item_sort_key=None,
           for_json=None, ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False, tuple_as_sexp=False,
-          omit_version_marker=False, force_python_impl=False, **kw):
+          omit_version_marker=False, **kw):
     """Serialize ``obj`` as Python ``string`` or ``bytes`` object, using the conversion table used by ``dump`` (above).
 
     Args:
@@ -285,8 +280,6 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
             When False, all tuple values will be written as Ion lists. Default: False.
         omit_version_marker (Optional|True|False): If binary is False and omit_version_marker is True, omits the
             Ion Version Marker ($ion_1_0) from the output.  Default: False.
-        force_python_impl (Optional[True|False]) When True, will run the pure python implementation no matter if
-            C extension is enabled.   Default: False.
         **kw: NOT IMPLEMENTED
 
     Returns:
@@ -301,7 +294,7 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
          use_decimal=use_decimal, namedtuple_as_object=namedtuple_as_object, tuple_as_array=tuple_as_array,
          bigint_as_string=bigint_as_string, sort_keys=sort_keys, item_sort_key=item_sort_key, for_json=for_json,
          ignore_nan=ignore_nan, int_as_string_bitcount=int_as_string_bitcount, iterable_as_array=iterable_as_array,
-         tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, force_python_impl=force_python_impl, **kw)
+         tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, **kw)
 
     ret_val = ion_buffer.getvalue()
     ion_buffer.close()
@@ -310,8 +303,8 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
     return ret_val
 
 
-def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
-         parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, force_python_impl=False, **kw):
+def load_original(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
+         parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
     """Deserialize ``fp`` (a file-like object), which contains a text or binary Ion stream, to a Python object using the
     following conversion table::
         +-------------------+-------------------+
@@ -359,8 +352,6 @@ def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object
         parse_constant: NOT IMPLEMENTED
         object_pairs_hook: NOT IMPLEMENTED
         use_decimal: NOT IMPLEMENTED
-        force_python_impl (Optional[True|False]) When True, will run the pure python implementation no matter if
-            C extension is enabled.   Default: False.
         **kw: NOT IMPLEMENTED
 
     Returns (Any):
@@ -369,26 +360,23 @@ def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object
         else:
             A sequence of Python objects representing a stream of Ion values.
     """
-    if not force_python_impl and c_ext and catalog is None:
-        return load_extension(fp, single_value=single_value, encoding='utf-8', **kw)
+    if isinstance(fp, _TEXT_TYPES):
+        raw_reader = text_reader(is_unicode=True)
     else:
-        if isinstance(fp, _TEXT_TYPES):
-            raw_reader = text_reader(is_unicode=True)
+        maybe_ivm = fp.read(4)
+        fp.seek(0)
+        if maybe_ivm == _IVM:
+            raw_reader = binary_reader()
         else:
-            maybe_ivm = fp.read(4)
-            fp.seek(0)
-            if maybe_ivm == _IVM:
-                raw_reader = binary_reader()
-            else:
-                raw_reader = text_reader()
-        reader = blocking_reader(managed_reader(raw_reader, catalog), fp)
-        out = []  # top-level
-        _load(out, reader)
-        if single_value:
-            if len(out) != 1:
-                raise IonException('Stream contained %d values; expected a single value.' % (len(out),))
-            return out[0]
-        return out
+            raw_reader = text_reader()
+    reader = blocking_reader(managed_reader(raw_reader, catalog), fp)
+    out = []  # top-level
+    _load(out, reader)
+    if single_value:
+        if len(out) != 1:
+            raise IonException('Stream contained %d values; expected a single value.' % (len(out),))
+        return out[0]
+    return out
 
 
 _FROM_ION_TYPE = [
@@ -433,7 +421,7 @@ def _load(out, reader, end_type=IonEventType.STREAM_END, in_struct=False):
 
 
 def loads(ion_str, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
-          parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, force_python_impl=False, **kw):
+          parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
     """Deserialize ``ion_str``, which is a string representation of an Ion object, to a Python object using the
     conversion table used by load (above).
 
@@ -452,8 +440,6 @@ def loads(ion_str, catalog=None, single_value=True, encoding='utf-8', cls=None, 
         parse_constant: NOT IMPLEMENTED
         object_pairs_hook: NOT IMPLEMENTED
         use_decimal: NOT IMPLEMENTED
-        force_python_impl (Optional[True|False]) When True, will run the pure python implementation no matter if
-            C extension is enabled.   Default: False.
         **kw: NOT IMPLEMENTED
 
     Returns (Any):
@@ -472,16 +458,10 @@ def loads(ion_str, catalog=None, single_value=True, encoding='utf-8', cls=None, 
 
     return load(ion_buffer, catalog=catalog, single_value=single_value, encoding=encoding, cls=cls,
                 object_hook=object_hook, parse_float=parse_float, parse_int=parse_int, parse_constant=parse_constant,
-                object_pairs_hook=object_pairs_hook, use_decimal=use_decimal, force_python_impl=force_python_impl)
+                object_pairs_hook=object_pairs_hook, use_decimal=use_decimal)
 
 
-def dump_extension(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=False, ensure_ascii=True,
-                check_circular=True, allow_nan=True, cls=None, indent=None,
-                separators=None, encoding='utf-8', default=None, use_decimal=True, namedtuple_as_object=True,
-                tuple_as_array=True, bigint_as_string=False, sort_keys=False, item_sort_key=None, for_json=None,
-                ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False, tuple_as_sexp=False,
-                omit_version_marker=False, **kw):
-
+def dump_extension(obj, fp, binary=True, sequence_as_stream=False, tuple_as_sexp=False, omit_version_marker=False):
     res = ionc.ionc_write(obj, binary, sequence_as_stream, tuple_as_sexp)
 
     # TODO next_release: support "omit_version_marker" rather than hacking.
@@ -491,9 +471,37 @@ def dump_extension(obj, fp, imports=None, binary=True, sequence_as_stream=False,
     fp.write(res)
 
 
-def load_extension(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
-                    parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
-
+def load_extension(fp, single_value=True, encoding='utf-8'):
     data = fp.read()
     data = data if isinstance(data, bytes) else bytes(data, encoding)
     return ionc.ionc_read(data, single_value, False)
+
+
+def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=False, ensure_ascii=True,
+         check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, encoding='utf-8', default=None,
+         use_decimal=True, namedtuple_as_object=True, tuple_as_array=True, bigint_as_string=False, sort_keys=False,
+         item_sort_key=None, for_json=None, ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False,
+         tuple_as_sexp=False, omit_version_marker=False, **kw):
+    if c_ext and imports is None:
+        return dump_extension(obj, fp, binary=binary, sequence_as_stream=sequence_as_stream,
+                              tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker)
+    else:
+        return dump_original(obj, fp, imports=imports, binary=binary, sequence_as_stream=sequence_as_stream,
+                             skipkeys=skipkeys, ensure_ascii=ensure_ascii,check_circular=check_circular,
+                             allow_nan=allow_nan, cls=cls, indent=indent, separators=separators, encoding=encoding,
+                             default=default, use_decimal=use_decimal, namedtuple_as_object=namedtuple_as_object,
+                             tuple_as_array=tuple_as_array, bigint_as_string=bigint_as_string, sort_keys=sort_keys,
+                             item_sort_key=item_sort_key, for_json=for_json, ignore_nan=ignore_nan,
+                             int_as_string_bitcount=int_as_string_bitcount, iterable_as_array=iterable_as_array,
+                             tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, **kw)
+
+
+def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
+         parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
+    if c_ext and catalog is None:
+        return load_extension(fp, single_value=single_value, encoding=encoding)
+    else:
+        return load_original(fp, catalog=catalog, single_value=single_value, encoding=encoding, cls=cls,
+                             object_hook=object_hook, parse_float=parse_float, parse_int=parse_int,
+                             parse_constant=parse_constant, object_pairs_hook=object_pairs_hook,
+                             use_decimal=use_decimal, **kw)
