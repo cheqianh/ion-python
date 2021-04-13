@@ -19,15 +19,10 @@ from __future__ import print_function
 
 import os
 from os.path import dirname, join
-
 from subprocess import call
 import platform
-
 from setuptools import setup, find_packages, Extension
-
 from setuptools.command.install import install
-
-from install import _install_ionc
 
 C_EXT = True
 _OS = platform.system()
@@ -42,6 +37,8 @@ def change_c_extension_lib_path():
     """
     Change C extension (.so)'s dependency search path to relative path (@loader_path)
     """
+    if not _MAC:
+        return
     dir_path = join(dirname(os.path.abspath(__file__)), 'build')
     for folder in os.listdir(dir_path):
         if folder[:5] == 'bdist':
@@ -56,12 +53,10 @@ def change_c_extension_lib_path():
 class CustomInstall(install):
     def run(self):
         install.run(self)
-        if _MAC:
-            change_c_extension_lib_path()
+        change_c_extension_lib_path()
 
 
 def run_setup():
-    _install_ionc()
     if C_EXT:
         print('C extension is enabled!')
         kw = dict(

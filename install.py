@@ -185,3 +185,5 @@ def _install_ionc():
     return True
 
 
+if __name__ == '__main__':
+    _install_ionc()
