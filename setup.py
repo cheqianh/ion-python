@@ -38,7 +38,7 @@ def change_c_extension_lib_path():
     """
     Change C extension (.so)'s dependency search path to relative path (@loader_path)
     """
-    if not (_MAC or _LINUX):
+    if not _MAC:
         return
     dir_path = join(dirname(os.path.abspath(__file__)), 'build')
     for folder in os.listdir(dir_path):
