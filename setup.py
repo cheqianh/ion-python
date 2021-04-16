@@ -67,11 +67,9 @@ def run_setup():
                     sources=['amazon/ion/ioncmodule.c'],
                     include_dirs=['amazon/ion/ion-c-build/include',
                                   'amazon/ion/ion-c-build/include/ionc',
-                                  'amazon/ion/ion-c-build/include/decNumber',
-                    ],
+                                  'amazon/ion/ion-c-build/include/decNumber'],
                     libraries=['ionc', 'decNumber'],
-                    library_dirs=['amazon/ion/ion-c-build/lib',
-                    ],
+                    library_dirs=['amazon/ion/ion-c-build/lib'],
                     extra_link_args=['-Wl,-rpath,%s' % 'amazon/ion/ion-c-build/lib'],   # Used for Dev
                 ),
             ],
