@@ -154,7 +154,7 @@ def _move_lib_mac(name):
 def move_build_lib_for_distribution():
     # move ion-c-build to amazon/ion for distribution
     target_path = abspath(join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build'))
-    print('build files are moved to %s now.' % target_path)
+    print('build files are moved to %s.' % target_path)
     if os.path.isdir(target_path):
         shutil.rmtree(target_path)
     shutil.copytree(_C_EXT_DEPENDENCY_DIR, target_path)

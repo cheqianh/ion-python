@@ -28,6 +28,7 @@ C_EXT = True
 _OS = platform.system()
 _WIN = _OS == 'Windows'
 _MAC = _OS == 'Darwin'
+_LINUX = _OS == 'Linux'
 _BDIST = 'bdist'
 _SHARED_OBJECT_SUFFIX = '.so'
 _IONC_LIB_LOCATION = join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build/lib')
@@ -37,7 +38,7 @@ def change_c_extension_lib_path():
     """
     Change C extension (.so)'s dependency search path to relative path (@loader_path)
     """
-    if not _MAC:
+    if not (_MAC or _LINUX):
         return
     dir_path = join(dirname(os.path.abspath(__file__)), 'build')
     for folder in os.listdir(dir_path):
