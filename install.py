@@ -120,7 +120,7 @@ def _move_lib_win(name):
     """
     Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
     """
-    shutil.copytree(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+    shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
     lib_path = join(_IONC_DIR, name, 'Release', '%s.%s' % (name, _LIB_SUFFIX_WIN))
     shutil.copytree(lib_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
@@ -144,7 +144,7 @@ def _move_lib_linux(name):
     """
     Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
     """
-    shutil.copytree(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+    shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
     dir_path = join(_IONC_LOCATION, name)
     for file in os.listdir(dir_path):
@@ -157,7 +157,7 @@ def _move_lib_mac(name):
     """
     Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
     """
-    shutil.copytree(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+    shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
     dir_path = join(_IONC_LOCATION, name)
     for file in os.listdir(dir_path):
