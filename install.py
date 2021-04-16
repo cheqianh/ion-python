@@ -45,29 +45,29 @@ _IONC_INCLUDES_LOCATIONS = {
 _USERLIB_LOCATION = abspath(join(os.sep, 'usr', 'local', 'lib'))
 _USERINCLUDE_LOCATION = abspath(join(os.sep, 'usr', 'local', 'include'))
 
-_LIB_SUFFIX = '.dylib'
 _LIB_PREFIX = 'lib'
+
+_LIB_SUFFIX_MAC = '.dylib'
+_LIB_SUFFIX_WIN = '.lib'
+_LIB_SUFFIX_LINUX = '.so'
 
 
 def _get_lib_name(name):
-    return '%s%s%s' % (_LIB_PREFIX, name, _LIB_SUFFIX)
+    if _MAC:
+        return '%s%s%s' % (_LIB_PREFIX, name, _LIB_SUFFIX_MAC)
+    elif _LINUX:
+        return '%s%s%s' % (_LIB_PREFIX, name, _LIB_SUFFIX_LINUX)
+    elif _WIN:
+        return '%s%s%s' % (name, _LIB_SUFFIX_WIN)
+
+
 
 
 def _library_exists():
-    if _MAC or _LINUX:
-        return _library_exists_mac('ionc') and _library_exists_mac('decNumber')
-    elif _WIN:
-        return _library_exists_win()
+    return _library_exists_helper('ionc') and _library_exists_helper('decNumber')
 
 
-def _library_exists_win():
-    if not os.path.exists('ion-c/ionc/Release/ionc.lib') \
-            or not os.path.exists('ion-c/decNumber/Release/decNumber.lib'):
-        return False
-    return True
-
-
-def _library_exists_mac(name):
+def _library_exists_helper(name):
     return os.path.exists(join(_C_EXT_DEPENDENCY_LIB_LOCATION, _get_lib_name(name)))
 
 
@@ -105,7 +105,7 @@ def _build_ionc():
     if _WIN:
         _build_ionc_win()
     elif _MAC or _LINUX:
-        _build_ionc_mac()
+        _build_ionc_mac_and_linux()
 
 
 def _build_ionc_win():
@@ -122,33 +122,50 @@ def _move_lib_win(name):
     """
     Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
     """
-    shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+    shutil.copytree(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
-    lib_path = join(_IONC_DIR, name, 'Release', '%s.lib' % name)
-    shutil.move(lib_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
+    lib_path = join(_IONC_DIR, name, 'Release', '%s.%s' % (name, _LIB_SUFFIX_WIN))
+    shutil.copytree(lib_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
 
 
 
-def _build_ionc_mac():
+def _build_ionc_mac_and_linux():
     # build ion-c
     check_call(['./build-release.sh'])
 
     # move ion-c to output dir
-    _move_lib_mac('ionc')
-    _move_lib_mac('decNumber')
+    if _MAC:
+        _move_lib_mac('ionc')
+        _move_lib_mac('decNumber')
+    elif _LINUX:
+        _move_lib_linux('ionc')
+        _move_lib_linux('decNumber')
+
+
+def _move_lib_linux(name):
+    """
+    Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
+    """
+    shutil.copytree(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+
+    dir_path = join(_IONC_LOCATION, name)
+    for file in os.listdir(dir_path):
+        file_path = join(dir_path, file)
+        if file.startswith('%s%s.%s' % (_LIB_PREFIX, name, _LIB_SUFFIX_LINUX)):
+            shutil.copytree(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
 
 
 def _move_lib_mac(name):
     """
     Move library and its include files to ion-c-build/lib and ion-c-build/include respectively
     """
-    shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+    shutil.copytree(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
     dir_path = join(_IONC_LOCATION, name)
     for file in os.listdir(dir_path):
         file_path = join(dir_path, file)
-        if file.endswith(_LIB_SUFFIX):
-            shutil.move(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
+        if file.endswith(_LIB_SUFFIX_MAC):
+            shutil.copytree(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
 
 
 def move_build_lib_for_distribution():
