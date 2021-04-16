@@ -39,11 +39,8 @@ _IONC_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c'))
 _IONC_LOCATION = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'build', 'release'))
 _IONC_INCLUDES_LOCATIONS = {
     'ionc': abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'ionc', 'include', 'ionc')),
-    'decNumber': abspath(
-        join(dirname(os.path.abspath(__file__)), 'ion-c', 'decNumber', 'include', 'decNumber'))
+    'decNumber': abspath(join(dirname(os.path.abspath(__file__)), 'ion-c', 'decNumber', 'include', 'decNumber'))
 }
-_USERLIB_LOCATION = abspath(join(os.sep, 'usr', 'local', 'lib'))
-_USERINCLUDE_LOCATION = abspath(join(os.sep, 'usr', 'local', 'include'))
 
 _LIB_PREFIX = 'lib'
 
@@ -149,7 +146,7 @@ def _move_lib_linux(name):
     dir_path = join(_IONC_LOCATION, name)
     for file in os.listdir(dir_path):
         file_path = join(dir_path, file)
-        if file.startswith('%s%s.%s' % (_LIB_PREFIX, name, _LIB_SUFFIX_LINUX)):
+        if file.startswith('%s%s%s' % (_LIB_PREFIX, name, _LIB_SUFFIX_LINUX)):
             shutil.copytree(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
 
 
