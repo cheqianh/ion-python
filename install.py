@@ -54,7 +54,7 @@ def _get_lib_name(name):
 
 
 def _library_exists():
-    if _MAC:
+    if _MAC or _LINUX:
         return _library_exists_mac('ionc') and _library_exists_mac('decNumber')
     elif _WIN:
         return _library_exists_win()

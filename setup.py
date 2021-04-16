@@ -58,7 +58,6 @@ class CustomInstall(install):
 
 
 def run_setup():
-
     if C_EXT:
         print('C extension is enabled!')
         kw = dict(
