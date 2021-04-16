@@ -28,6 +28,7 @@ _PYPY = hasattr(sys, 'pypy_translation_info')
 _OS = platform.system()
 _WIN = _OS == 'Windows'
 _MAC = _OS == 'Darwin'
+_LINUX = _OS == 'Linux'
 
 _C_EXT_DEPENDENCY_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c-build'))
 _C_EXT_DEPENDENCY_LIB_LOCATION = abspath(join(_C_EXT_DEPENDENCY_DIR, 'lib'))
@@ -103,7 +104,7 @@ def _download_ionc():
 def _build_ionc():
     if _WIN:
         _build_ionc_win()
-    elif _MAC:
+    elif _MAC or _LINUX:
         _build_ionc_mac()
 
 
@@ -151,7 +152,7 @@ def _move_lib_mac(name):
 
 
 def move_build_lib_for_distribution():
-    # move ion-c-build inside amazon/ion for distribution
+    # move ion-c-build to amazon/ion for distribution
     target_path = abspath(join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build'))
     print('build files are moved to %s now.' % target_path)
     if os.path.isdir(target_path):
