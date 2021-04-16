@@ -58,9 +58,7 @@ def _get_lib_name(name):
     elif _LINUX:
         return '%s%s%s' % (_LIB_PREFIX, name, _LIB_SUFFIX_LINUX)
     elif _WIN:
-        return '%s%s%s' % (name, _LIB_SUFFIX_WIN)
-
-
+        return '%s%s' % (name, _LIB_SUFFIX_WIN)
 
 
 def _library_exists():
