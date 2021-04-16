@@ -34,29 +34,6 @@ _SHARED_OBJECT_SUFFIX = '.so'
 _IONC_LIB_LOCATION = join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build/lib')
 
 
-def change_c_extension_lib_path():
-    """
-    Change C extension (.so)'s dependency search path to relative path (@loader_path)
-    """
-    if not _MAC:
-        return
-    dir_path = join(dirname(os.path.abspath(__file__)), 'build')
-    for folder in os.listdir(dir_path):
-        if folder[:5] == 'bdist':
-            lib_dir = os.path.join(dir_path, folder, "wheel/amazon/ion/")
-            for file in os.listdir(lib_dir):
-                if file.endswith(_SHARED_OBJECT_SUFFIX):
-                    for lib in os.listdir(_IONC_LIB_LOCATION):
-                        call(['install_name_tool', '-change', '@rpath/%s' % lib,
-                              '@loader_path/ion-c-build/lib/%s' % lib, os.path.join(lib_dir, file)])
-
-
-class CustomInstall(install):
-    def run(self):
-        install.run(self)
-        change_c_extension_lib_path()
-
-
 def run_setup():
     if C_EXT:
         print('C extension is enabled!')
@@ -70,14 +47,15 @@ def run_setup():
                                   'amazon/ion/ion-c-build/include/decNumber'],
                     libraries=['ionc', 'decNumber'],
                     library_dirs=['amazon/ion/ion-c-build/lib'],
-                    extra_link_args=['-Wl,-rpath,%s' % 'amazon/ion/ion-c-build/lib'],   # Used for Dev
+                    extra_link_args=['-Wl,-rpath,%s' % '$ORIGIN/ion-c-build/lib'  # LINUX
+                                     '-Wl,-rpath,%s' % '@loader_path/ion-c-build/lib'  # MAC #
+                                     ],
                 ),
             ],
         )
     else:
         print('Using pure python implementation.')
         kw = dict()
-
 
     setup(
         name='amazon.ion',
@@ -103,7 +81,6 @@ def run_setup():
         tests_require=[
             'pytest',
         ],
-        cmdclass={'install': CustomInstall},
         **kw
     )
 
