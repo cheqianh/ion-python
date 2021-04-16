@@ -120,7 +120,7 @@ def _move_lib_win(name):
     shutil.move(_IONC_INCLUDES_LOCATIONS[name], _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
     lib_path = join(_IONC_DIR, name, 'Release', '%s.%s' % (name, _LIB_SUFFIX_WIN))
-    shutil.copytree(lib_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
+    shutil.copy(lib_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
 
 
 
@@ -147,7 +147,7 @@ def _move_lib_linux(name):
     for file in os.listdir(dir_path):
         file_path = join(dir_path, file)
         if file.startswith('%s%s%s' % (_LIB_PREFIX, name, _LIB_SUFFIX_LINUX)):
-            shutil.copytree(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
+            shutil.copy(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
 
 
 def _move_lib_mac(name):
@@ -160,7 +160,7 @@ def _move_lib_mac(name):
     for file in os.listdir(dir_path):
         file_path = join(dir_path, file)
         if file.endswith(_LIB_SUFFIX_MAC):
-            shutil.copytree(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
+            shutil.copy(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
 
 
 def move_build_lib_for_distribution():
