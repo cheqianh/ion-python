@@ -48,7 +48,7 @@ def run_setup():
                     libraries=['ionc', 'decNumber'],
                     library_dirs=['amazon/ion/ion-c-build/lib'],
                     extra_link_args=['-Wl,-rpath,%s' % '$ORIGIN/ion-c-build/lib'  # LINUX
-                                     '-Wl,-rpath,%s' % '@loader_path/ion-c-build/lib'  # MAC #
+                                     '-Wl,-rpath,%s' % '@loader_path/ion-c-build/lib'  # MAC
                                      ],
                 ),
             ],
@@ -59,7 +59,7 @@ def run_setup():
 
     setup(
         name='amazon.ion',
-        version='0.7.0',
+        version='0.7.96',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',

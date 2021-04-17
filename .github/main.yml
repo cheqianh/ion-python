@@ -1,0 +1,37 @@
+name: distribute wheels
+
+on:
+  pull_request:
+    branches:
+    - pypi
+
+jobs:
+  for-mac:
+    runs-on: macos-10.15
+    steps:
+      - name: python version
+        run: python --version
+
+      - name: python3 version
+        run: python3 --version
+
+      - name: python3.9 version
+        run: python3.9 --version
+
+      - name: Checkout ion-python
+          uses: actions/checkout@master
+          with:
+            repository: cheqianh/ion-python
+            ref: pypi
+            path: ion-python
+
+      - name: Set up python3 env
+        run: python3 -m venv ion-python/venv && . ion-python/venv/bin/activate
+
+      - name: Pip install
+        run: pip3 install wheel && pip3 install twine
+
+      - name: Build Wheels
+        run: python setup.py bdist_wheel
+
+
