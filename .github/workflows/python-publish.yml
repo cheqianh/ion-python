@@ -37,11 +37,11 @@ jobs:
         python -m pip install --upgrade pip
 
     - name: install wheels for python3 # need install by pip3 to avoid conflict issue.
-        if: ${{ matrix.python-version < 3 }}
-        run: |
-          pip install setuptools
-          pip install wheel
-          pip install twine
+      if: ${{ matrix.python-version < 3 }}
+      run: |
+        pip install setuptools
+        pip install wheel
+        pip install twine
 
     - name: Setup venv3
       if: ${{ matrix.python-version >= 3 }}
