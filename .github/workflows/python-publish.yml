@@ -45,7 +45,7 @@ jobs:
         python -m pip install -U wheel
 
     - name: pip install
-      if: ${{ matrix.python-version }} >= 3
+      if: ${{ matrix.python-version >= 3 }}
       run: |
         pip3 install wheel
         pip3 install twine
