@@ -27,7 +27,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Setup venv
-      if: ${{ matrix.python-version }} < 3
+      if: ${{ matrix.python-version < 3 }}
       run: |
         pip install virtualenv
         virtualenv venv --python=python${{ matrix.python-version }}
@@ -36,7 +36,7 @@ jobs:
         python -m pip install -U wheel
 
     - name: Setup venv
-      if: ${{ matrix.python-version }} >= 3
+      if: ${{ matrix.python-version >= 3 }}
       run: |
         python${{ matrix.python-version }} -m venv ./venv
         . venv/bin/activate
