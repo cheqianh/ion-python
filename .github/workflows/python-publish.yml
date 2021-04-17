@@ -34,7 +34,7 @@ jobs:
         virtualenv venv --python=python${{ matrix.python-version }}
         python --version
         python -m pip install --upgrade pip
-        python -m pip install -U wheel
+        pip install wheel
 
     - name: Setup venv
       if: ${{ matrix.python-version >= 3 }}
@@ -46,6 +46,7 @@ jobs:
         python -m pip install -U wheel
 
     - name: install wheels for python3 # need install by pip3 to avoid conflict issue.
+      if: ${{ matrix.python-version >= 3 }}
       run: |
         pip3 install wheel
         pip3 install twine
