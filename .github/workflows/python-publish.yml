@@ -12,6 +12,7 @@ jobs:
   deploy_mac:
     runs-on: macos-10.15
     strategy:
+      fail-fast: false
       matrix:
         python-version: [ '2.7', '3.6', '3.7', '3.8', '3.9' ]
 
@@ -54,7 +55,6 @@ jobs:
         python${{ matrix.python-version }} install.py
 
     - name: Build and publish
-      continue-on-error: true
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
