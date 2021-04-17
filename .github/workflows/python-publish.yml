@@ -54,12 +54,8 @@ jobs:
     - name: install wheels for python3 # need install by pip3 to avoid conflict issue.
       if: ${{ matrix.python-version >= 3 }}
       run: |
-        pip3 install wheel
-        pip3 install twine
-
-#    - name: Build and publish
-#      run: |
-#        python${{ matrix.python-version }} setup.py sdist
+        pip install wheel
+        pip install twine
 
     - name: Build ion-c
       run: |
