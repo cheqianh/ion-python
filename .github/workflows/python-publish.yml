@@ -4,7 +4,7 @@
 name: wheels-publish
 
 on:
-  pull_request:
+  push:
     branches:
     - pypi
 
