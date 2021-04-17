@@ -28,13 +28,7 @@ jobs:
       run: |
         python3 -m venv ./venv
         . venv/bin/activate
-        python -m pip install --upgrade pip
-        python -m pip install -U wheel
-
-    - name: pip install
-      run: |
-        pip3 install wheel
-        pip3 install twine
+        python -m pip install --upgrade pip wheel twine
         
     - name: Build ion-c
       run: |
