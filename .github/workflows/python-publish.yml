@@ -31,7 +31,7 @@ jobs:
 
     - name: Setup venv
       run: |
-        python3 -m venv ./venv
+        python${{ matrix.python-version }} -m venv ./venv
         . venv/bin/activate
         python --version
         python -m pip install --upgrade pip
