@@ -35,7 +35,7 @@ def run_setup():
                                   'amazon/ion/ion-c-build/include/decNumber'],
                     libraries=['ionc', 'decNumber'],
                     library_dirs=['amazon/ion/ion-c-build/lib'],
-                    extra_link_args=['-Wl,-rpath,%s' % '$ORIGIN/ion-c-build/lib'  # LINUX
+                    extra_link_args=['-Wl,-rpath,%s' % '$ORIGIN/ion-c-build/lib',  # LINUX
                                      '-Wl,-rpath,%s' % '@loader_path/ion-c-build/lib'  # MAC
                                      ],
                 ),
