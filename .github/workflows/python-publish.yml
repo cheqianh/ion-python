@@ -34,13 +34,11 @@ jobs:
         virtualenv venv --python=python${{ matrix.python-version }}
         source venv/bin/activate
         python --version
-        python -m pip install --upgrade pip
-        python -m pip install -U wheel setuptools
 
     - name: install wheels for python # need install by pip3 to avoid conflict issue.
       if: ${{ matrix.python-version < 3 }}
       run: |
-        pip install setuptools
+        pip install setuptools=44.1.1
         pip install wheel
         pip install twine
 
