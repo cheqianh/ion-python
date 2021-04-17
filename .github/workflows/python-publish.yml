@@ -34,8 +34,6 @@ jobs:
         python --version
         python -m pip install --upgrade pip
         python -m pip install -U wheel
-        pip install wheel
-        pip install twine
 
     - name: Setup venv
       if: ${{ matrix.python-version >= 3 }}
@@ -47,7 +45,6 @@ jobs:
         python -m pip install -U wheel
 
     - name: install wheels for python3 # need install by pip3 to avoid conflict issue.
-      if: ${{ matrix.python-version >= 3 }}
       run: |
         pip3 install wheel
         pip3 install twine
@@ -55,7 +52,6 @@ jobs:
     - name: Build ion-c
       run: |
         python${{ matrix.python-version }} install.py
-        ls amazon/ion/ion-c-build/lib
 
     - name: Build and publish
       continue-on-error: true
