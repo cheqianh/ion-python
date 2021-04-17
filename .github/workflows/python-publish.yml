@@ -28,18 +28,17 @@ jobs:
       run: |
         python3 -m venv ./venv
         . venv/bin/activate
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
+        pip install wheel
+        pip install twine
         
-    - name: Build and publish
+    - name: Build ion-c
       run: |
         python install.py
-        echo '----------------'
         ls amazon/ion/ion-c-build/lib
-        echo '----------------'
-        pwd
-        echo '----------------'
-        python setup.py bdist_wheel
+
+    - name: Build wheel
+      run: python setup.py bdist_wheel
+
 
 #    - name: Publish a Python distribution to PyPI
 #      uses: pypa/gh-action-pypi-publish@release/v1
