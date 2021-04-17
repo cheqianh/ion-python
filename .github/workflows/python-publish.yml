@@ -58,14 +58,19 @@ jobs:
         pip3 install wheel
         pip3 install twine
 
-    - name: Build ion-c
-      run: |
-        python${{ matrix.python-version }} install.py
-
     - name: Build and publish
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python${{ matrix.python-version }} setup.py bdist_wheel
-        twine upload --repository testpypi dist/*
+        python${{ matrix.python-version }} setup.py dist
+
+
+#    - name: Build ion-c
+#      run: |
+#        python${{ matrix.python-version }} install.py
+#
+#    - name: Build and publish
+#      env:
+#        TWINE_USERNAME: __token__
+#        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+#      run: |
+#        python${{ matrix.python-version }} setup.py bdist_wheel
+#        twine upload --repository testpypi dist/*
