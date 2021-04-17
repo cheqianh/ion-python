@@ -9,8 +9,7 @@ on:
     - pypi
 
 jobs:
-  deploy:
-
+  deploy_mac:
     runs-on: macos-10.15
 
     steps:
@@ -36,21 +35,58 @@ jobs:
         pip3 install wheel
         pip3 install twine
 
-
     - name: Build ion-c
       run: |
         python3 install.py
         ls amazon/ion/ion-c-build/lib
 
-#    - name: Build wheel
-#      run: python3 setup.py bdist_wheel
+    - name: Build and publish
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        python3 setup.py sdist bdist_wheel
+        twine upload --repository testpypi dist/*
 
-#    - name: Publish a Python distribution to PyPI
-#      uses: pypa/gh-action-pypi-publish@release/v1
-#      with:
-#        user: __token__
-#        password: ${{ secrets.PYPI_PASSWORD }}
-#        repository_url: https://test.pypi.org/legacy/
+
+  deploy_win:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        python-version: [ '2.7', '3.6', '3.7', '3.8', '3.9' ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: cheqianh/ion-python
+        ref: pypi
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: python version
+      run: python --version
+
+    - name: Setup venv
+      run: |
+        python${{ matrix.python-version }} -m venv ./venv
+        . venv/bin/activate
+        echo ------------
+        python --version
+        python -m pip install --upgrade pip
+        python -m pip install -U wheel
+
+    - name: pip install
+      run: |
+        pip3 install wheel
+        pip3 install twine
+
+    - name: Build ion-c
+      run: |
+        python3 install.py
+        ls amazon/ion/ion-c-build/lib
 
     - name: Build and publish
       env:
