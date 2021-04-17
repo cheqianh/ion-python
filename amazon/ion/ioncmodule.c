@@ -161,9 +161,9 @@ static void c_string_from_py(PyObject* str, char** out, Py_ssize_t* len_out) {
     else {
         utf8_str = PyString_AsEncodedObject(str, "utf-8", "strict");
     }
-    if (!utf8_str) {
-        _FAILWITHMSG(IERR_INVALID_ARG, "Python 2 fails to convert python string to utf8 string.");
-    }
+//    if (!utf8_str) {
+//        _FAILWITHMSG(IERR_INVALID_ARG, "Python 2 fails to convert python string to utf8 string.");
+//    }
     PyString_AsStringAndSize(utf8_str, out, len_out);
     Py_DECREF(utf8_str);
 #endif
