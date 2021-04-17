@@ -38,7 +38,7 @@ jobs:
     - name: install wheels for python # need install by pip3 to avoid conflict issue.
       if: ${{ matrix.python-version < 3 }}
       run: |
-        pip install setuptools=44.1.1
+        pip install setuptools==44.1.1
         pip install wheel
         pip install twine
 
