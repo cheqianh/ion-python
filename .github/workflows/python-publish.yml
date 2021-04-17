@@ -50,7 +50,7 @@ jobs:
 
     - name: Build ion-c
       run: |
-        python3 install.py
+        python install.py
         ls amazon/ion/ion-c-build/lib
 
     - name: Build and publish
