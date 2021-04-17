@@ -17,21 +17,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
-from os.path import dirname, join
-from subprocess import call
-import platform
 from setuptools import setup, find_packages, Extension
-from setuptools.command.install import install
 
 C_EXT = True
-_OS = platform.system()
-_WIN = _OS == 'Windows'
-_MAC = _OS == 'Darwin'
-_LINUX = _OS == 'Linux'
-_BDIST = 'bdist'
-_SHARED_OBJECT_SUFFIX = '.so'
-_IONC_LIB_LOCATION = join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build/lib')
 
 
 def run_setup():
@@ -47,8 +35,8 @@ def run_setup():
                                   'amazon/ion/ion-c-build/include/decNumber'],
                     libraries=['ionc', 'decNumber'],
                     library_dirs=['amazon/ion/ion-c-build/lib'],
-                    extra_link_args=['-Wl,-rpath,%s' % '$ORIGIN/ion-c-build/lib'  # LINUX
-                                     '-Wl,-rpath,%s' % '@loader_path/ion-c-build/lib'  # MAC #
+                    extra_link_args=['-Wl,-rpath,%s' % '$ORIGIN/ion-c-build/lib',  # LINUX
+                                     '-Wl,-rpath,%s' % '@loader_path/ion-c-build/lib'  # MAC
                                      ],
                 ),
             ],
@@ -59,7 +47,7 @@ def run_setup():
 
     setup(
         name='amazon.ion',
-        version='0.7.0',
+        version='0.7.98',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',
