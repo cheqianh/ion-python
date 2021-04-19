@@ -45,6 +45,7 @@ def run_setup():
         print('Using pure python implementation.')
         kw = dict()
 
+
     setup(
         name='amazon.ion',
         version='0.7.98',
@@ -54,12 +55,14 @@ def run_setup():
         author_email='ion-team@amazon.com',
         license='Apache License 2.0',
 
+
         packages=find_packages(exclude=['tests*']),
         include_package_data=True,
         namespace_packages=['amazon'],
 
         install_requires=[
             'six',
+            'jsonconversion'
         ],
 
         setup_requires=[
