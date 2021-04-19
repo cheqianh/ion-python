@@ -483,7 +483,6 @@ def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=
          item_sort_key=None, for_json=None, ignore_nan=False, int_as_string_bitcount=None, iterable_as_array=False,
          tuple_as_sexp=False, omit_version_marker=False, **kw):
     if c_ext and imports is None:
-        print('c is on')
         return dump_extension(obj, fp, binary=binary, sequence_as_stream=sequence_as_stream,
                               tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker)
     else:
@@ -500,10 +499,8 @@ def dump(obj, fp, imports=None, binary=True, sequence_as_stream=False, skipkeys=
 def load(fp, catalog=None, single_value=True, encoding='utf-8', cls=None, object_hook=None, parse_float=None,
          parse_int=None, parse_constant=None, object_pairs_hook=None, use_decimal=None, **kw):
     if c_ext and catalog is None:
-        print('c is on')
         return load_extension(fp, single_value=single_value, encoding=encoding)
     else:
-        print('python is on')
         return load_original(fp, catalog=catalog, single_value=single_value, encoding=encoding, cls=cls,
                              object_hook=object_hook, parse_float=parse_float, parse_int=parse_int,
                              parse_constant=parse_constant, object_pairs_hook=object_pairs_hook,
