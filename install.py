@@ -68,7 +68,7 @@ def _library_exists_helper(name):
 
 def _download_ionc():
     try:
-        # Create directory to store build output
+        # Create a directory to store build output
         if not isdir(_C_EXT_DEPENDENCY_DIR):
             os.mkdir(_C_EXT_DEPENDENCY_DIR)
             os.mkdir(_C_EXT_DEPENDENCY_LIB_LOCATION)
@@ -148,7 +148,6 @@ def _move_lib_mac_and_linux(name):
         elif _MAC:
             if file.endswith(_LIB_SUFFIX_MAC):
                 shutil.copy(file_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
-
 
 
 def move_build_lib_for_distribution():
