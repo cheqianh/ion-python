@@ -70,5 +70,5 @@ jobs:
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
-        name: dist
+        name: Mac-Wheels
         path: dist/
