@@ -56,10 +56,19 @@ jobs:
       run: |
         python${{ matrix.python-version }} install.py
 
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python${{ matrix.python-version }} setup.py bdist_wheel
-        twine upload --repository testpypi dist/*
+#    - name: Build and publish
+#      env:
+#        TWINE_USERNAME: __token__
+#        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+#      run: |
+#        python${{ matrix.python-version }} setup.py bdist_wheel
+#        twine upload --repository testpypi dist/*
+
+    - name: Build wheels
+      run: python${{ matrix.python-version }} setup.py bdist_wheel
+
+    - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist/
