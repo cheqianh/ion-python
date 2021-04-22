@@ -68,7 +68,7 @@ jobs:
       run: python${{ matrix.python-version }} setup.py bdist_wheel
 
     - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: dist
-          path: dist/
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: dist/
