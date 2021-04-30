@@ -461,6 +461,7 @@ static iERR ionc_write_big_int(hWRITER writer, PyObject *obj) {
     PyObject* int_str = PyObject_CallMethod(obj, "__str__", NULL);
     ION_STRING string_value;
     ion_string_from_py(int_str, &string_value);
+
     ION_INT ion_int_value;
 
     IONCHECK(ion_int_init(&ion_int_value, NULL));
