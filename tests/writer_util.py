@@ -108,7 +108,7 @@ else:
     _FLOAT_2_E_NEG_15_ENC = b'2e-15'
 
 SIMPLE_SCALARS_MAP_TEXT = {
-    _IT.NULL:(
+    _IT.NULL: (
         (None, b'null'),
     ),
     _IT.BOOL: (

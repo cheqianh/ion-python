@@ -270,15 +270,24 @@ def _assert_symbol_aware_ion_equals(assertion, output):
 def _dump_load_run(p, dumps_func, loads_func, binary):
     # test dump
     res = dumps_func(p.obj, binary=binary, sequence_as_stream=p.stream, tuple_as_sexp=p.tuple_as_sexp)
-    if not c_ext:
+    if isinstance(p.expected, (tuple, list)):
+        expecteds = p.expected
+    else:
+        expecteds = (p.expected,)
+    write_success = False
+    for expected in expecteds:
         if not p.has_symbols:
             if binary:
-                assert (_IVM + p.expected) == res
+                write_success = (_IVM + expected) == res
             else:
-                assert (b'$ion_1_0 ' + p.expected) == res
+                write_success = (b'$ion_1_0 ' + expected) == res
         else:
             # The payload contains a LST. The value comes last, so compare the end bytes.
-            assert p.expected == res[len(res) - len(p.expected):]
+            write_success = expected == res[len(res) - len(expected):]
+        if write_success:
+            break
+    if not write_success:
+        raise AssertionError('Expected: %s , found %s' % (expecteds, res))
     # test load
     res = loads_func(res, single_value=(not p.stream))
     _assert_symbol_aware_ion_equals(p.obj, res)
@@ -362,10 +371,18 @@ def generate_annotated_values_text(scalars_map, container_map):
         if not isinstance(obj, _IonNature):
             continue
         obj.ion_annotations = (_st(u'annot1'), _st(u'annot2'),)
+
+        annotated_expected = ()
+        if isinstance(value_p.expected, (tuple, list)):
+            for expected in value_p.expected:
+                annotated_expected += (b"annot1::annot2::" + expected, )
+        else:
+            annotated_expected += (b"annot1::annot2::" + value_p.expected, )
+
         yield _Parameter(
             desc='ANNOTATED %s' % value_p.desc,
             obj=obj,
-            expected=b"annot1::annot2::" + value_p.expected,
+            expected=annotated_expected,
             has_symbols=True,
             stream=value_p.stream
         )
