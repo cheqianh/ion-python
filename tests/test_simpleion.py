@@ -341,7 +341,7 @@ def _simple_loads(data, *args, **kw):
     *tuple(chain(
         generate_scalars_binary(SIMPLE_SCALARS_MAP_BINARY),
         generate_containers_binary(_SIMPLE_CONTAINER_MAP),
-        # generate_annotated_values_binary(SIMPLE_SCALARS_MAP_BINARY, _SIMPLE_CONTAINER_MAP),
+        generate_annotated_values_binary(SIMPLE_SCALARS_MAP_BINARY, _SIMPLE_CONTAINER_MAP),
     ))
 )
 def test_dump_load_binary(p):
@@ -352,7 +352,7 @@ def test_dump_load_binary(p):
     *tuple(chain(
         generate_scalars_binary(SIMPLE_SCALARS_MAP_BINARY),
         generate_containers_binary(_SIMPLE_CONTAINER_MAP),
-        # generate_annotated_values_binary(SIMPLE_SCALARS_MAP_BINARY, _SIMPLE_CONTAINER_MAP),
+        generate_annotated_values_binary(SIMPLE_SCALARS_MAP_BINARY, _SIMPLE_CONTAINER_MAP),
     ))
 )
 def test_dumps_loads_binary(p):
@@ -427,8 +427,8 @@ def generate_annotated_values_text(scalars_map, container_map):
 @parametrize(
     *tuple(chain(
         generate_scalars_text(SIMPLE_SCALARS_MAP_TEXT),
-        # generate_containers_text(_SIMPLE_CONTAINER_MAP),
-        # generate_annotated_values_text(SIMPLE_SCALARS_MAP_TEXT, _SIMPLE_CONTAINER_MAP),
+        generate_containers_text(_SIMPLE_CONTAINER_MAP),
+        generate_annotated_values_text(SIMPLE_SCALARS_MAP_TEXT, _SIMPLE_CONTAINER_MAP),
     ))
 )
 def test_dump_load_text(p):
@@ -437,9 +437,9 @@ def test_dump_load_text(p):
 
 @parametrize(
     *tuple(chain(
-        # generate_scalars_text(SIMPLE_SCALARS_MAP_TEXT),
-        # generate_containers_text(_SIMPLE_CONTAINER_MAP),
-        # generate_annotated_values_text(SIMPLE_SCALARS_MAP_TEXT, _SIMPLE_CONTAINER_MAP),
+        generate_scalars_text(SIMPLE_SCALARS_MAP_TEXT),
+        generate_containers_text(_SIMPLE_CONTAINER_MAP),
+        generate_annotated_values_text(SIMPLE_SCALARS_MAP_TEXT, _SIMPLE_CONTAINER_MAP),
     ))
 )
 def test_dumps_loads_text(p):
@@ -613,34 +613,34 @@ class PrettyPrintParams(record('ion_text', 'indent', ('exact_text', None), ('reg
     pass
 
 
-# @parametrize(
-#         PrettyPrintParams(ion_text='a', indent='  ', exact_text="$ion_1_0\na"),
-#         PrettyPrintParams(ion_text='"a"', indent='  ', exact_text="$ion_1_0\n\"a\""),
-#         PrettyPrintParams(ion_text='\'$a__9\'', indent='  ', exact_text="$ion_1_0\n$a__9"),
-#         PrettyPrintParams(ion_text='\'$a_\\\'_9\'', indent='  ', exact_text="$ion_1_0\n\'$a_\\\'_9\'"),
-#         PrettyPrintParams(ion_text='[a, b, chair::2008-08-08T]', indent='  ',
-#             exact_text="$ion_1_0\n[\n  a,\n  b,\n  chair::2008-08-08T\n]"),
-#         PrettyPrintParams(ion_text='[a, b, chair::2008-08-08T]', indent=None, # not pretty print
-#             exact_text="$ion_1_0 [a,b,chair::2008-08-08T]"),
-#         PrettyPrintParams(ion_text='[apple, {roof: false}]', indent='\t',
-#             exact_text="$ion_1_0\n[\n\tapple,\n\t{\n\t\troof: false\n\t}\n]"),
-#         PrettyPrintParams(ion_text='[apple, "banana", {roof: false}]', indent='\t',
-#             exact_text="$ion_1_0\n[\n\tapple,\n\t\"banana\",\n\t{\n\t\troof: false\n\t}\n]"),
-#         PrettyPrintParams(ion_text='[apple, {roof: false, walls:4, door: wood::large::true}]', indent='\t',
-#             regexes=["\\A\\$ion_1_0\n\\[\n\tapple,\n\t\\{", "\n\t\tdoor: wood::large::true,?\n",
-#                 "\n\t\troof: false,?\n", "\n\t\twalls: 4,?\n", "\n\t\\}\n\\]\\Z"])
-#         )
-# def test_pretty_print(p):
-#     if c_ext:
-#         # TODO support pretty print for C extension.
-#         return
-#     ion_text, indent, exact_text, regexes = p
-#     ion_value = loads(ion_text)
-#     actual_pretty_ion_text = dumps(ion_value, binary=False, indent=indent)
-#     if exact_text is not None:
-#         assert actual_pretty_ion_text == exact_text
-#     for regex_str in regexes:
-#         assert re.search(regex_str, actual_pretty_ion_text, re.M) is not None
+@parametrize(
+        PrettyPrintParams(ion_text='a', indent='  ', exact_text="$ion_1_0\na"),
+        PrettyPrintParams(ion_text='"a"', indent='  ', exact_text="$ion_1_0\n\"a\""),
+        PrettyPrintParams(ion_text='\'$a__9\'', indent='  ', exact_text="$ion_1_0\n$a__9"),
+        PrettyPrintParams(ion_text='\'$a_\\\'_9\'', indent='  ', exact_text="$ion_1_0\n\'$a_\\\'_9\'"),
+        PrettyPrintParams(ion_text='[a, b, chair::2008-08-08T]', indent='  ',
+            exact_text="$ion_1_0\n[\n  a,\n  b,\n  chair::2008-08-08T\n]"),
+        PrettyPrintParams(ion_text='[a, b, chair::2008-08-08T]', indent=None, # not pretty print
+            exact_text="$ion_1_0 [a,b,chair::2008-08-08T]"),
+        PrettyPrintParams(ion_text='[apple, {roof: false}]', indent='\t',
+            exact_text="$ion_1_0\n[\n\tapple,\n\t{\n\t\troof: false\n\t}\n]"),
+        PrettyPrintParams(ion_text='[apple, "banana", {roof: false}]', indent='\t',
+            exact_text="$ion_1_0\n[\n\tapple,\n\t\"banana\",\n\t{\n\t\troof: false\n\t}\n]"),
+        PrettyPrintParams(ion_text='[apple, {roof: false, walls:4, door: wood::large::true}]', indent='\t',
+            regexes=["\\A\\$ion_1_0\n\\[\n\tapple,\n\t\\{", "\n\t\tdoor: wood::large::true,?\n",
+                "\n\t\troof: false,?\n", "\n\t\twalls: 4,?\n", "\n\t\\}\n\\]\\Z"])
+        )
+def test_pretty_print(p):
+    if c_ext:
+        # TODO support pretty print for C extension.
+        return
+    ion_text, indent, exact_text, regexes = p
+    ion_value = loads(ion_text)
+    actual_pretty_ion_text = dumps(ion_value, binary=False, indent=indent)
+    if exact_text is not None:
+        assert actual_pretty_ion_text == exact_text
+    for regex_str in regexes:
+        assert re.search(regex_str, actual_pretty_ion_text, re.M) is not None
 
 
 # Regression test for issue #95
