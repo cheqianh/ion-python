@@ -26,4 +26,4 @@ jobs:
       run: python install.py && python setup.py build_ext --inplace
 
     - name: setup Test
-      run: apt-get install valgrind
+      run: sudo apt-get install valgrind
