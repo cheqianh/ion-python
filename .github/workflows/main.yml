@@ -23,7 +23,7 @@ jobs:
         python-version: '3.x'
 
     - name: Set up project
-      run: python install.py
+      run: python install.py && python setup.py build_ext --inplace
 
-    - name: Set up project
-      run: python setup.py build_ext --inplace
+    - name: setup Test
+      run: apt-get install valgrind
