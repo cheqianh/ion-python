@@ -25,5 +25,13 @@ jobs:
     - name: Set up project
       run: python install.py && python setup.py build_ext --inplace
 
-    - name: setup Test
+    - name: Install valgrind
       run: sudo apt-get install valgrind
+
+    - name: Install valgrind
+      run: ls
+
+
+#    - name: Test
+#      run: G_SLICE=always-malloc G_DEBUG=gc-friendly  valgrind -v --tool=memcheck --leak-check=full --num-callers=40 --log-file=valgrind.log $(which <program>) <arguments>
+
