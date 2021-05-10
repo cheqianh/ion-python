@@ -22,16 +22,16 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Set up project
+    - name: Set up ion-python
       run: python install.py && python setup.py build_ext --inplace
 
     - name: Install valgrind
       run: sudo apt-get install valgrind
 
-    - name: Install valgrind
-      run: ls amazon/ion/
+#    - name: test
+#      run: ionc.cpython-39-x86_64-linux-gnu.so
 
 
-#    - name: Test
-#      run: G_SLICE=always-malloc G_DEBUG=gc-friendly  valgrind -v --tool=memcheck --leak-check=full --num-callers=40 --log-file=valgrind.log $(which <program>) <arguments>
+    - name: Test
+      run: G_SLICE=always-malloc G_DEBUG=gc-friendly  valgrind -v --tool=memcheck --leak-check=full --num-callers=40 --log-file=valgrind.log ionc.cpython-39-x86_64-linux-gnu.so
 
