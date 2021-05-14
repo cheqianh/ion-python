@@ -14,7 +14,7 @@ phases:
       - pip3 install cmake
       - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools"
 #      - export VS150COMNTOOLS="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools"
-      - vswhere
+      - echo VS150COMNTOOLS
       - python install.py
       - ls amazon/ion/ion-c-build
       - ls amazon/ion/ion-c-build/lib/
