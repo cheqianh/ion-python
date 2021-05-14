@@ -12,8 +12,9 @@ phases:
       - echo Installing............
       - ls
       - pip3 install cmake
-      - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools"
-      - set VS150COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools
+      - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\"
+      - C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe -property installationPath
+      - set VS150COMNTOOLS="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools"
       - echo %VS150COMNTOOLS%
       - set
       - python install.py
