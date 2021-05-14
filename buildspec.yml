@@ -14,4 +14,4 @@ phases:
       - python install.py
   post_build:
     commands:
-      - echo "Build completed on `date`"
+      - echo "Build completed"
