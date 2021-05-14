@@ -13,7 +13,12 @@ phases:
       - ls
       - pip3 install cmake
       - cmake --version
+      - ls /c/
+      - ls /c/Program Files (x86)/
       - python install.py
+      - ls amazon/ion/ion-c-build
+      - ls amazon/ion/ion-c-build/lib/
+      - ls amazon/ion/ion-c-build/include/
   post_build:
     commands:
       - echo "Build completed"
