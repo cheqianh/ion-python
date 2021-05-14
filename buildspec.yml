@@ -12,6 +12,8 @@ phases:
       - echo Installing............
       - ls
       - python install.py
+      - git --version
+      - cmake --version
   post_build:
     commands:
       - echo "Build completed"
