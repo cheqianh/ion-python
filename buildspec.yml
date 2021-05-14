@@ -13,8 +13,8 @@ phases:
       - ls
       - pip3 install cmake
       - cmake --version
-      - ls /c/
-      - ls /c/Program Files (x86)/
+      - ls C:\
+      - ls C:\Program Files (x86)
       - python install.py
       - ls amazon/ion/ion-c-build
       - ls amazon/ion/ion-c-build/lib/
