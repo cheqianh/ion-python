@@ -14,7 +14,8 @@ phases:
       - pip3 install cmake
       - cmake --version
       - dir C:\
-      - dir "C:\Program Files (x86)"
+      - dir "C:\Program Files (x86)\Microsoft Visual Studio"
+#      - export VS150COMNTOOLS="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/Tools"
       - python install.py
       - ls amazon/ion/ion-c-build
       - ls amazon/ion/ion-c-build/lib/
