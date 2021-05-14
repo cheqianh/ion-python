@@ -11,9 +11,9 @@ phases:
     commands:
       - echo Installing............
       - ls
-      - python install.py
       - pip3 install cmake
       - cmake --version
+      - python install.py
   post_build:
     commands:
       - echo "Build completed"
