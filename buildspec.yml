@@ -15,6 +15,7 @@ phases:
       - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools"
       - set VS150COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools
       - echo %VS150COMNTOOLS%
+      - set
       - python install.py
       - ls amazon/ion/ion-c-build
       - ls amazon/ion/ion-c-build/lib/
