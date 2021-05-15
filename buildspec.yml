@@ -16,6 +16,6 @@ phases:
 #      build wheels
       - python setup.py bdist_wheel
       - ls dist
-  artifacts:
-    files:
-      - dist/*.whl
+artifacts:
+  files:
+    - dist/*.whl
