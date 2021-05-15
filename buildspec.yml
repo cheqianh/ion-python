@@ -11,16 +11,15 @@ phases:
     commands:
       - echo Installing............
       - ls
-      - pip3 install cmake
-#      - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\"
-#      - C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe -property installationPath
-#      - set VS150COMNTOOLS="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools"
-#      - echo $Env:VS150COMNTOOLS
-#      - set
+#      - pip3 install cmake
+
       - python install.py
       - ls amazon/ion/ion-c-build
       - ls amazon/ion/ion-c-build/lib/
       - ls amazon/ion/ion-c-build/include/
+
+      - python setup.py bdist_wheel
+      - ls
   post_build:
     commands:
       - echo "Build completed"
