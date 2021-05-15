@@ -4,22 +4,18 @@ phases:
   install:
     runtime-versions:
       java: corretto11
-  pre_build:
-    commands:
-      - echo "Nothing to do in the pre_build phase..."
   build:
     commands:
-      - echo Installing............
       - ls
-#      - pip3 install cmake
-
+      - pip3 install cmake
+#      Builds ion-c
       - python install.py
       - ls amazon/ion/ion-c-build
       - ls amazon/ion/ion-c-build/lib/
       - ls amazon/ion/ion-c-build/include/
-
+#      build wheels
       - python setup.py bdist_wheel
       - ls
-  post_build:
-    commands:
-      - echo "Build completed"
+#  artifacts:
+#    files:
+#      - target/messageUtil-1.0.jar
