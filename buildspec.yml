@@ -14,7 +14,6 @@ phases:
       - pip3 install cmake
       - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\"
 #      - C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe -property installationPath
-      - Get-ChildItem Env:
 #      - set VS150COMNTOOLS="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools"
       - echo $Env:VS150COMNTOOLS
       - set
