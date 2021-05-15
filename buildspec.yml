@@ -15,7 +15,7 @@ phases:
       - ls amazon/ion/ion-c-build/include/
 #      build wheels
       - python setup.py bdist_wheel
-      - ls
-#  artifacts:
-#    files:
-#      - target/messageUtil-1.0.jar
+      - ls dist
+  artifacts:
+    files:
+      - dist/*.whl
