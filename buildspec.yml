@@ -8,10 +8,14 @@ phases:
 
   build:
     commands:
+      - ls /opt/python
       - sudo apt-get update
       - sudo apt-get install python3.6
       - sudo apt-get install python3.9
-#      - ls
+      - python3.9 --version
+      - python3.6 --version
+
+      #      - ls
 #      - pip3 install cmake
       #      Builds ion-c
 #      - python install.py
