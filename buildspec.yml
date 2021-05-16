@@ -14,9 +14,8 @@ phases:
       - ls amazon/ion/ion-c-build/lib/
       - ls amazon/ion/ion-c-build/include/
       - which python3
-      - ls /lib
-      - ls /root/.pyenv
-      - ls /root/.pyenv/shims
+      - ls /
+      - brew --version
       #      build wheels
 #      - python setup.py bdist_wheel
 #      - python3.8 setup.py bdist_wheel
