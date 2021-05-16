@@ -14,13 +14,15 @@ phases:
       - ls amazon/ion/ion-c-build/lib/
       - ls amazon/ion/ion-c-build/include/
       - which python3
-      - ls /
+      - ls /lib
+      - ls /root/.pyenv
+      - ls /root/.pyenv/shims
       #      build wheels
-      - python setup.py bdist_wheel
+#      - python setup.py bdist_wheel
 #      - python3.8 setup.py bdist_wheel
 #      - python3.7 setup.py bdist_wheel
 #      - python3.6 setup.py bdist_wheel
-      - ls dist
+#      - ls dist
 #artifacts:
 #  files:
 #    - dist/*.whl
