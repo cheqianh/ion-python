@@ -10,6 +10,7 @@ phases:
     commands:
       - apt-get update
       - apt-get install python3.6
+      - apt-get install python3.9
 #      - ls
 #      - pip3 install cmake
       #      Builds ion-c
