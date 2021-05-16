@@ -13,9 +13,8 @@ phases:
       - ls amazon/ion/ion-c-build
       - ls amazon/ion/ion-c-build/lib/
       - ls amazon/ion/ion-c-build/include/
-      - ls /Library
-      - ls /Library/Frameworks
-      - ls /Library/Frameworks/Python.framework/Versions/
+      - which python3
+      - ls /
       #      build wheels
       - python setup.py bdist_wheel
 #      - python3.8 setup.py bdist_wheel
