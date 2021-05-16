@@ -10,12 +10,9 @@ phases:
       - pip3 install cmake
 #      Builds ion-c
       - python install.py
-      - ls amazon/ion/ion-c-build
       - ls amazon/ion/ion-c-build/lib/
-      - ls amazon/ion/ion-c-build/include/
       - which python3
-      - ls /
-      - brew --version
+      - apt-get install python3.6
       #      build wheels
 #      - python setup.py bdist_wheel
 #      - python3.8 setup.py bdist_wheel
