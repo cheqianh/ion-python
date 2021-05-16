@@ -3,17 +3,15 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      python: 3.7
+      python: 3.x
     commands:
 
   build:
     commands:
-      - ls /
-      - sudo apt-get update
-      - sudo apt-get install python3.6
-      - sudo apt-get install python3.9
-      - python3.9 --version
-      - python3.6 --version
+      - ls /opt
+      - python3.7 --version
+      - python3 --version
+      - python3.8 --version
 
       #      - ls
 #      - pip3 install cmake
