@@ -17,13 +17,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 from os.path import abspath, dirname, join, exists
-
 from setuptools import setup, find_packages, Extension
-
 from install import _install_ionc
 
-C_EXT = True
+C_EXT = True if not hasattr(sys, 'pypy_translation_info') else False
 c_ext_dir = abspath(join(dirname(__file__), 'amazon/ion/ion-c-build'))
 
 
@@ -60,7 +59,7 @@ def run_setup():
 
     setup(
         name='amazon.ion',
-        version='0.7.98',
+        version='0.7.0',
         description='A Python implementation of Amazon Ion.',
         url='http://github.com/amzn/ion-python',
         author='Amazon Ion Team',

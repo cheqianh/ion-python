@@ -260,15 +260,6 @@ def generate_annotated_values_binary(scalars_map, container_map):
         obj.ion_annotations = (_st(u'annot1'), _st(u'annot2'),)
         annot_length = 2  # 10 and 11 each fit in one VarUInt byte
         annot_length_length = 1  # 2 fits in one VarUInt byte
-        value_length = len(value_p.expected)
-        length_field = annot_length + annot_length_length + value_length
-        wrapper = []
-        _write_length(wrapper, length_field, 0xE0)
-        wrapper.extend([
-            VARUINT_END_BYTE | annot_length,
-            VARUINT_END_BYTE | 10,
-            VARUINT_END_BYTE | 11
-        ])
 
         final_expected = ()
         if isinstance(value_p.expected, (list, tuple)):
@@ -276,6 +267,16 @@ def generate_annotated_values_binary(scalars_map, container_map):
         else:
             expecteds = (value_p.expected, )
         for one_expected in expecteds:
+            value_length = len(one_expected)
+            length_field = annot_length + annot_length_length + value_length
+            wrapper = []
+            _write_length(wrapper, length_field, 0xE0)
+            wrapper.extend([
+                VARUINT_END_BYTE | annot_length,
+                VARUINT_END_BYTE | 10,
+                VARUINT_END_BYTE | 11
+            ])
+
             exp = bytearray(wrapper) + one_expected
             final_expected += (exp, )
 
