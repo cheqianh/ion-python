@@ -261,7 +261,6 @@ def generate_annotated_values_binary(scalars_map, container_map):
         annot_length = 2  # 10 and 11 each fit in one VarUInt byte
         annot_length_length = 1  # 2 fits in one VarUInt byte
 
-
         final_expected = ()
         if isinstance(value_p.expected, (list, tuple)):
             expecteds = value_p.expected
