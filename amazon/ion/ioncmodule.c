@@ -245,7 +245,6 @@ static void c_decstr_to_py_decstr(char* dec_str) {
         }
     }
 }
->>>>>>> 3529e2a5b41e5ea9a617dd711b5c8a3db4f3315f
 
 /*
  *  Returns a python symbol token using an ION_STRING
