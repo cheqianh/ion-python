@@ -230,21 +230,6 @@ static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL
     Py_XDECREF(element);
 }
 
-/*
- *  Converts an ion decimal string to a python-decimal-accept string. NOTE: ion spec uses 'd' in a decimal number
- *  while python decimal object accepts 'e'
- *
- *  Args:
- *      dec_str:  A C string representing a decimal number
- *
- */
-static void c_decstr_to_py_decstr(char* dec_str) {
-    for (int i = 0; i < strlen(dec_str); i++) {
-        if (dec_str[i] == 'd' || dec_str[i] == 'D') {
-            dec_str[i] = 'e';
-        }
-    }
-}
 
 /*
  *  Returns a python symbol token using an ION_STRING
