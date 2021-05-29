@@ -33,6 +33,7 @@ _LINUX = _OS == 'Linux'
 _C_EXT_DEPENDENCY_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c-build'))
 _C_EXT_DEPENDENCY_LIB_LOCATION = abspath(join(_C_EXT_DEPENDENCY_DIR, 'lib'))
 _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS = abspath(join(_C_EXT_DEPENDENCY_DIR, 'include'))
+_CURRENT_ION_C_DIR = './ion-c'
 
 _IONC_REPO_URL = "https://github.com/amzn/ion-c.git"
 _IONC_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'ion-c'))
@@ -75,9 +76,10 @@ def _download_ionc():
             os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
 
         # Install ion-c.
-        if not isdir('./ion-c'):
-            check_call(['git', 'clone', '--recurse-submodules', _IONC_REPO_URL, 'ion-c'])
-        os.chdir('ion-c/')
+        if isdir(_CURRENT_ION_C_DIR):
+            shutil.rmtree(_CURRENT_ION_C_DIR)
+        check_call(['git', 'submodule', 'update', '--init', '--recursive'])
+        os.chdir(_CURRENT_ION_C_DIR)
 
         # Initialize submodule.
         check_call(['git', 'submodule', 'update', '--init'])
@@ -90,8 +92,6 @@ def _download_ionc():
     except:
         if isdir(_C_EXT_DEPENDENCY_DIR):
             shutil.rmtree(_C_EXT_DEPENDENCY_DIR)
-        if isdir(_IONC_DIR):
-            shutil.rmtree(_IONC_DIR)
         print('ionc build error: Unable to build ion-c library.')
         return False
     finally:
@@ -99,8 +99,6 @@ def _download_ionc():
         temp_ionc_dir = "./ion-c-build"
         if isdir(temp_ionc_dir):
             shutil.rmtree(temp_ionc_dir)
-        if isdir(_IONC_DIR):
-            shutil.rmtree(_IONC_DIR)
 
 
 def _build_ionc():
