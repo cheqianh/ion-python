@@ -329,7 +329,7 @@ def _dump_load_run(p, dumps_func, loads_func, binary):
         if write_success:
             break
     if not write_success:
-        raise AssertionError('Expected: %s , found %s, len %s' % (expecteds, res, len(p.expected[0])))
+        raise AssertionError('Expected: %s , found %s' % (expecteds, res))
     # test load
     res = loads_func(res, single_value=(not p.stream))
     _assert_symbol_aware_ion_equals(p.obj, res)

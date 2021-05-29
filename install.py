@@ -92,6 +92,8 @@ def _download_ionc():
     except:
         if isdir(_C_EXT_DEPENDENCY_DIR):
             shutil.rmtree(_C_EXT_DEPENDENCY_DIR)
+        if isdir(_IONC_DIR):
+            shutil.rmtree(_IONC_DIR)
         print('ionc build error: Unable to build ion-c library.')
         return False
     finally:
