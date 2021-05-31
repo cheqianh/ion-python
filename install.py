@@ -24,7 +24,6 @@ import sys
 from subprocess import check_call
 from os.path import join, abspath, isdir, dirname
 
-_PYPY = hasattr(sys, 'pypy_translation_info')
 _OS = platform.system()
 _WIN = _OS == 'Windows'
 _MAC = _OS == 'Darwin'
@@ -178,9 +177,6 @@ def _check_dependencies():
 
 
 def _install_ionc():
-    if _PYPY:  # This is pointless if running with PyPy, which doesn't support CPython extensions anyway.
-        return False
-
     if not _check_dependencies():
         return False
 
