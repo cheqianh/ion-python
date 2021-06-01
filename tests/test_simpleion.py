@@ -218,9 +218,9 @@ def generate_scalars_binary(scalars_map, preceding_symbols=0):
                 else:
                     symbol_expected = _serialize_symbol(
                         IonEvent(IonEventType.SCALAR, IonType.SYMBOL, SymbolToken(None, 10 + preceding_symbols)))
-                # yield _Parameter(IonType.SYMBOL.name + ' ' + native,
-                #                  IonPyText.from_value(IonType.SYMBOL, native), symbol_expected, True)
-            # yield _Parameter('%s %s' % (ion_type.name, native), native, native_expected, has_symbols)
+                yield _Parameter(IonType.SYMBOL.name + ' ' + native,
+                                 IonPyText.from_value(IonType.SYMBOL, native), symbol_expected, True)
+            yield _Parameter('%s %s' % (ion_type.name, native), native, native_expected, has_symbols)
             wrapper = _FROM_ION_TYPE[ion_type].from_value(ion_type, native)
             yield _Parameter(repr(wrapper), wrapper, expected, has_symbols)
 
@@ -265,7 +265,6 @@ def generate_annotated_values_binary(scalars_map, container_map):
         annot_length = 2  # 10 and 11 each fit in one VarUInt byte
         annot_length_length = 1  # 2 fits in one VarUInt byte
 
-
         final_expected = ()
         if isinstance(value_p.expected, (list, tuple)):
             expecteds = value_p.expected
@@ -278,19 +277,17 @@ def generate_annotated_values_binary(scalars_map, container_map):
             wrapper = []
             _write_length(wrapper, length_field, 0xE0)
 
-            if c_ext and obj.ion_type is IonType.SYMBOL:
-                if isinstance(obj, IonPyNull) or (hasattr(obj, 'sid') and (obj.sid < 10 or obj.sid is None)):
-                    wrapper.extend([
-                        VARUINT_END_BYTE | annot_length,
-                        VARUINT_END_BYTE | 10,
-                        VARUINT_END_BYTE | 11
-                    ])
-                else:
-                    wrapper.extend([
-                        VARUINT_END_BYTE | annot_length,
-                        VARUINT_END_BYTE | 11,
-                        VARUINT_END_BYTE | 12
-                    ])
+            # Ion-c adds annotations to LST after symbol values while ion-python adds
+            # symbol values first. For example: annot1:annot2:'test'
+            # \xbe\x9f\x8e\x8test\x86annot1\x86annot2\xe5\x82\x8b\x8c\x71\x0a'   Ion-c
+            # \xbe\x9f\x8e\x86annot1\x86annot2\x8test\xe5\x82\x8a\x8b\x71\x0c'   Ion-python
+            if c_ext and obj.ion_type is IonType.SYMBOL and not isinstance(obj, IonPyNull) \
+                    and not (hasattr(obj, 'sid') and (obj.sid < 10 or obj.sid is None)):
+                wrapper.extend([
+                    VARUINT_END_BYTE | annot_length,
+                    VARUINT_END_BYTE | 11,
+                    VARUINT_END_BYTE | 12
+                ])
             else:
                 wrapper.extend([
                     VARUINT_END_BYTE | annot_length,
