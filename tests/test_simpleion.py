@@ -277,7 +277,7 @@ def generate_annotated_values_binary(scalars_map, container_map):
             wrapper = []
             _write_length(wrapper, length_field, 0xE0)
 
-            # Ion-c adds annotations to LST after symbol values while ion-python adds
+            # Ion-c binary writer adds annotations to LST after symbol values while ion-python adds
             # symbol values first. For example: annot1:annot2:'test'
             # \xbe\x9f\x8e\x8test\x86annot1\x86annot2\xe5\x82\x8b\x8c\x71\x0a'   Ion-c
             # \xbe\x9f\x8e\x86annot1\x86annot2\x8test\xe5\x82\x8a\x8b\x71\x0c'   Ion-python
