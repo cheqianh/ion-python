@@ -667,11 +667,11 @@ iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp) {
         }
 
         // Determine lsu.
-        int lsu_array[digits_len];
-        for (int i=0; i<digits_len; i++) {
+        int c_digits_array[digits_len];
+        for (int i = 0; i < digits_len; i++) {
             PyObject* digit = PyTuple_GetItem(py_digits, i);
             Py_INCREF(digit);
-            lsu_array[i] = PyLong_AsLong(digit);
+            c_digits_array[i] = PyLong_AsLong(digit);
             Py_DECREF(digit);
         }
         Py_XDECREF(py_digits);
@@ -682,7 +682,7 @@ iERR ionc_write_value(hWRITER writer, PyObject* obj, PyObject* tuple_as_sexp) {
             decNumberUnit per_digit = 0;
             int op_count = count + 1 < DECDPUN ? count + 1 : DECDPUN;
             for (int i = 0; i < op_count; i++) {
-                per_digit += pow(10, i) * lsu_array[count--];
+                per_digit += pow(10, i) * c_digits_array[count--];
             }
             decNumber_value.lsu[index++] = per_digit;
         }
