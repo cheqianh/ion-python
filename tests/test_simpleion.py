@@ -212,11 +212,15 @@ def generate_scalars_binary(scalars_map, preceding_symbols=0):
                 has_symbols = True
             elif ion_type is IonType.STRING:
                 # Encode all strings as symbols too.
-                symbol_expected = _serialize_symbol(
-                    IonEvent(IonEventType.SCALAR, IonType.SYMBOL, SymbolToken(None, 10 + preceding_symbols)))
-                yield _Parameter(IonType.SYMBOL.name + ' ' + native,
-                                 IonPyText.from_value(IonType.SYMBOL, native), symbol_expected, True)
-            yield _Parameter('%s %s' % (ion_type.name, native), native, native_expected, has_symbols)
+                if c_ext:
+                    symbol_expected = _serialize_symbol(
+                        IonEvent(IonEventType.SCALAR, IonType.SYMBOL, SymbolToken(None, 10)))
+                else:
+                    symbol_expected = _serialize_symbol(
+                        IonEvent(IonEventType.SCALAR, IonType.SYMBOL, SymbolToken(None, 10 + preceding_symbols)))
+                # yield _Parameter(IonType.SYMBOL.name + ' ' + native,
+                #                  IonPyText.from_value(IonType.SYMBOL, native), symbol_expected, True)
+            # yield _Parameter('%s %s' % (ion_type.name, native), native, native_expected, has_symbols)
             wrapper = _FROM_ION_TYPE[ion_type].from_value(ion_type, native)
             yield _Parameter(repr(wrapper), wrapper, expected, has_symbols)
 
@@ -261,21 +265,38 @@ def generate_annotated_values_binary(scalars_map, container_map):
         annot_length = 2  # 10 and 11 each fit in one VarUInt byte
         annot_length_length = 1  # 2 fits in one VarUInt byte
 
+
         final_expected = ()
         if isinstance(value_p.expected, (list, tuple)):
             expecteds = value_p.expected
         else:
             expecteds = (value_p.expected, )
+
         for one_expected in expecteds:
             value_length = len(one_expected)
             length_field = annot_length + annot_length_length + value_length
             wrapper = []
             _write_length(wrapper, length_field, 0xE0)
-            wrapper.extend([
-                VARUINT_END_BYTE | annot_length,
-                VARUINT_END_BYTE | 10,
-                VARUINT_END_BYTE | 11
-            ])
+
+            if c_ext and obj.ion_type is IonType.SYMBOL:
+                if isinstance(obj, IonPyNull) or (hasattr(obj, 'sid') and (obj.sid < 10 or obj.sid is None)):
+                    wrapper.extend([
+                        VARUINT_END_BYTE | annot_length,
+                        VARUINT_END_BYTE | 10,
+                        VARUINT_END_BYTE | 11
+                    ])
+                else:
+                    wrapper.extend([
+                        VARUINT_END_BYTE | annot_length,
+                        VARUINT_END_BYTE | 11,
+                        VARUINT_END_BYTE | 12
+                    ])
+            else:
+                wrapper.extend([
+                    VARUINT_END_BYTE | annot_length,
+                    VARUINT_END_BYTE | 10,
+                    VARUINT_END_BYTE | 11
+                ])
 
             exp = bytearray(wrapper) + one_expected
             final_expected += (exp, )
