@@ -998,7 +998,7 @@ static iERR ionc_read_timestamp(hREADER hreader, PyObject** timestamp_out) {
             decQuadScaleB(&fraction, &fraction, decQuadFromInt32(&tmp, MICROSECOND_DIGITS), &dec_context);
             int32_t microsecond = decQuadToInt32Exact(&fraction, &dec_context, DEC_ROUND_DOWN);
             if (fractional_precision > MICROSECOND_DIGITS) {
-                // Python only supports up to microsecond precision
+                // Ion C only supports up to microsecond precision
                 fractional_precision = MICROSECOND_DIGITS;
             }
 
