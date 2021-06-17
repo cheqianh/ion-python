@@ -155,11 +155,13 @@ def _move_lib_mac_and_linux(name):
 
 def move_build_lib_for_distribution():
     # Create a directory to store build output.
-    if not isdir(_C_EXT_DEPENDENCY_DIR):
-        os.mkdir(_C_EXT_DEPENDENCY_DIR)
-        os.mkdir(_C_EXT_DEPENDENCY_LIB_LOCATION)
-        os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS['ionc'])
-        os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS['decNumber'])
+    if isdir(_C_EXT_DEPENDENCY_DIR):
+        shutil.rmtree(_C_EXT_DEPENDENCY_DIR)
+    os.mkdir(_C_EXT_DEPENDENCY_DIR)
+    os.mkdir(_C_EXT_DEPENDENCY_LIB_LOCATION)
+    os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_DIR)
+    os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS['ionc'])
+    os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS['decNumber'])
     # Move ion-c binaries to ion-c-build
     _move_ionc()
 
