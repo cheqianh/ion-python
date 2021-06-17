@@ -23,18 +23,10 @@ from setuptools import setup, find_packages, Extension
 from install import _install_ionc
 
 C_EXT = True if not hasattr(sys, 'pypy_translation_info') else False
-c_ext_dir = abspath(join(dirname(__file__), 'amazon/ion/ion-c-build'))
-
-
-def c_ext_exist():
-    return exists(c_ext_dir) and exists(join(c_ext_dir, "lib")) and exists(join(c_ext_dir, "include"))
 
 
 def run_setup():
-    if C_EXT:
-        if not c_ext_exist():
-            print('Initialize C extension...')
-            _install_ionc()
+    if C_EXT and _install_ionc():
         print('C extension is enabled!')
         kw = dict(
             ext_modules=[
