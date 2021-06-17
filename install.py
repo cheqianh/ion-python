@@ -32,9 +32,10 @@ _LINUX = _OS == 'Linux'
 
 _C_EXT_DEPENDENCY_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build'))
 _C_EXT_DEPENDENCY_LIB_LOCATION = abspath(join(_C_EXT_DEPENDENCY_DIR, 'lib'))
+_C_EXT_DEPENDENCY_INCLUDES_DIR = abspath(join(_C_EXT_DEPENDENCY_DIR, 'include'))
 _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS = {
-    'ionc': abspath(join(_C_EXT_DEPENDENCY_DIR, 'include', 'ionc')),
-    'decNumber': abspath(join(_C_EXT_DEPENDENCY_DIR, 'include', 'decNumber'))
+    'ionc': abspath(join(_C_EXT_DEPENDENCY_INCLUDES_DIR, 'ionc')),
+    'decNumber': abspath(join(_C_EXT_DEPENDENCY_INCLUDES_DIR, 'decNumber'))
 }
 _CURRENT_ION_C_DIR = './ion-c'
 
@@ -123,7 +124,7 @@ def _move_lib_win(name):
     Move library and its include files to ion-c-build/lib and ion-c-build/include respectively.
     """
     for f in os.listdir(_IONC_INCLUDES_LOCATIONS[name]):
-        shutil.copy(join(_IONC_INCLUDES_LOCATIONS[name], f), _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+        shutil.copy(join(_IONC_INCLUDES_LOCATIONS[name], f), _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS[name])
 
     lib_path = join(_IONC_DIR, name, 'Release', '%s%s' % (name, _LIB_SUFFIX_WIN))
     shutil.copy(lib_path, _C_EXT_DEPENDENCY_LIB_LOCATION)
@@ -139,7 +140,7 @@ def _move_lib_mac_and_linux(name):
     Move library and its include files to ion-c-build/lib and ion-c-build/include respectively.
     """
     for f in os.listdir(_IONC_INCLUDES_LOCATIONS[name]):
-        shutil.copy(join(_IONC_INCLUDES_LOCATIONS[name], f), _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+        shutil.copy(join(_IONC_INCLUDES_LOCATIONS[name], f), _C_EXT_DEPENDENCY_INCLUDES_LOCATIONS[name])
 
     dir_path = join(_IONC_LOCATION, name)
     for file in os.listdir(dir_path):
@@ -157,7 +158,7 @@ def move_build_lib_for_distribution():
     if not isdir(_C_EXT_DEPENDENCY_DIR):
         os.mkdir(_C_EXT_DEPENDENCY_DIR)
         os.mkdir(_C_EXT_DEPENDENCY_LIB_LOCATION)
-        os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS)
+        os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_DIR)
     # Move ion-c binaries to ion-c-build
     _move_ionc()
 
