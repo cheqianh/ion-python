@@ -32,7 +32,10 @@ _LINUX = _OS == 'Linux'
 
 _C_EXT_DEPENDENCY_DIR = abspath(join(dirname(os.path.abspath(__file__)), 'amazon/ion/ion-c-build'))
 _C_EXT_DEPENDENCY_LIB_LOCATION = abspath(join(_C_EXT_DEPENDENCY_DIR, 'lib'))
-_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS = abspath(join(_C_EXT_DEPENDENCY_DIR, 'include'))
+_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS = {
+    'ionc': abspath(join(_C_EXT_DEPENDENCY_DIR, 'include', 'ionc')),
+    'decNumber': abspath(join(_C_EXT_DEPENDENCY_DIR, 'include', 'decNumber'))
+}
 _CURRENT_ION_C_DIR = './ion-c'
 
 _IONC_REPO_URL = "https://github.com/amzn/ion-c.git"
