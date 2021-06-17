@@ -158,7 +158,8 @@ def move_build_lib_for_distribution():
     if not isdir(_C_EXT_DEPENDENCY_DIR):
         os.mkdir(_C_EXT_DEPENDENCY_DIR)
         os.mkdir(_C_EXT_DEPENDENCY_LIB_LOCATION)
-        os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_DIR)
+        os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS['ionc'])
+        os.mkdir(_C_EXT_DEPENDENCY_INCLUDES_LOCATIONS['decNumber'])
     # Move ion-c binaries to ion-c-build
     _move_ionc()
 
