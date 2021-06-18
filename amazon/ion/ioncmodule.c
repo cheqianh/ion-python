@@ -1286,6 +1286,7 @@ iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_s
         }
         case tid_STRUCT_INT:
             ion_nature_constructor = _ionpydict_fromvalue;
+            emit_bare_values = TRUE;
             //Init a IonPyDict
             py_value = PyObject_CallFunctionObjArgs(
                 ion_nature_constructor,
@@ -1294,7 +1295,6 @@ iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_s
                 py_annotations,
                 NULL
             );
-            emit_bare_values = TRUE;
             IONCHECK(ionc_read_into_container(hreader, py_value, /*is_struct=*/TRUE, emit_bare_values));
             break;
         case tid_SEXP_INT:
@@ -1322,7 +1322,9 @@ iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_s
             NULL
         );
         Py_XDECREF(py_value);
+        Py_XDECREF(py_annotations);
     }
+
 
     if (in_struct && !None_field_name) {
         ION_STRING_INIT(&field_name);
