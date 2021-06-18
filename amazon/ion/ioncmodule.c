@@ -1294,9 +1294,8 @@ iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_s
                 py_annotations,
                 NULL
             );
-
-            IONCHECK(ionc_read_into_container(hreader, py_value, /*is_struct=*/TRUE, emit_bare_values));
             emit_bare_values = TRUE;
+            IONCHECK(ionc_read_into_container(hreader, py_value, /*is_struct=*/TRUE, emit_bare_values));
             break;
         case tid_SEXP_INT:
         {
@@ -1312,21 +1311,24 @@ iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_s
         default:
             FAILWITH(IERR_INVALID_STATE);
         }
+
+    PyObject* temp = py_value;
     if (!emit_bare_values) {
-        py_value = PyObject_CallFunctionObjArgs(
+        temp = PyObject_CallFunctionObjArgs(
             ion_nature_constructor,
             py_ion_type_table[ion_type >> 8],
             py_value,
             py_annotations,
             NULL
         );
+        Py_XDECREF(py_value);
     }
 
     if (in_struct && !None_field_name) {
         ION_STRING_INIT(&field_name);
         ion_string_assign_cstr(&field_name, field_name_value, field_name_len);
     }
-    ionc_add_to_container(container, py_value, in_struct, &field_name);
+    ionc_add_to_container(container, temp, in_struct, &field_name);
 
 fail:
     if (err) {
