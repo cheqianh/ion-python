@@ -270,17 +270,12 @@ def generate_annotated_values_binary(scalars_map, container_map):
             expecteds = value_p.expected
         else:
             expecteds = (value_p.expected, )
-
         for one_expected in expecteds:
             value_length = len(one_expected)
             length_field = annot_length + annot_length_length + value_length
             wrapper = []
             _write_length(wrapper, length_field, 0xE0)
 
-            # Ion-c binary writer adds annotations to LST after symbol values while ion-python adds
-            # symbol values first. For example: annot1:annot2:'test'
-            # \xbe\x9f\x8e\x8test\x86annot1\x86annot2\xe5\x82\x8b\x8c\x71\x0a'   Ion-c
-            # \xbe\x9f\x8e\x86annot1\x86annot2\x8test\xe5\x82\x8a\x8b\x71\x0c'   Ion-python
             if c_ext and obj.ion_type is IonType.SYMBOL and not isinstance(obj, IonPyNull) \
                     and not (hasattr(obj, 'sid') and (obj.sid < 10 or obj.sid is None)):
                 wrapper.extend([
