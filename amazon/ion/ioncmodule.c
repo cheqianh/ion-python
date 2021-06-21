@@ -13,7 +13,7 @@
 #define MICROSECOND_DIGITS 6
 
 #define ERR_MSG_MAX_LEN 100
-#define FIELD_NAME_MAX_LEN 100
+#define FIELD_NAME_MAX_LEN 1000
 
 static char _err_msg[ERR_MSG_MAX_LEN];
 
@@ -1078,6 +1078,10 @@ iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_s
     if (in_struct) {
         IONCHECK(ion_reader_get_field_name(hreader, &field_name));
         field_name_len = field_name.length;
+        if (field_name_len > FIELD_NAME_MAX_LEN) {
+            _FAILWITHMSG(IERR_INVALID_ARG,
+                "C extension only supports field_name of length 1000, please try again with pure python.");
+        }
         if (field_name.value != NULL) {
             None_field_name = FALSE;
             strcpy(field_name_value, field_name.value);
