@@ -24,6 +24,7 @@ from decimal import Decimal
 from io import BytesIO, TextIOBase
 from itertools import chain
 
+import objgraph
 import six
 
 from amazon.ion.reader_text import text_reader
@@ -287,7 +288,6 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
             ``bytes`` object, otherwise this will be a ``str`` object (or ``unicode`` in the case of Python 2.x)
     """
     ion_buffer = six.BytesIO()
-
     dump(obj, ion_buffer, imports=imports, sequence_as_stream=sequence_as_stream, binary=binary, skipkeys=skipkeys,
          ensure_ascii=ensure_ascii, check_circular=check_circular,
          allow_nan=allow_nan, cls=cls, indent=indent, separators=separators, encoding=encoding, default=default,
@@ -295,7 +295,6 @@ def dumps(obj, imports=None, binary=True, sequence_as_stream=False, skipkeys=Fal
          bigint_as_string=bigint_as_string, sort_keys=sort_keys, item_sort_key=item_sort_key, for_json=for_json,
          ignore_nan=ignore_nan, int_as_string_bitcount=int_as_string_bitcount, iterable_as_array=iterable_as_array,
          tuple_as_sexp=tuple_as_sexp, omit_version_marker=omit_version_marker, **kw)
-
     ret_val = ion_buffer.getvalue()
     ion_buffer.close()
     if not binary:
