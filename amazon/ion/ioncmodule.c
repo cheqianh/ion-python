@@ -216,13 +216,17 @@ static PyObject* ion_build_py_string(ION_STRING* string_value) {
  */
 static void ionc_add_to_container(PyObject* pyContainer, PyObject* element, BOOL in_struct, ION_STRING* field_name) {
     if (in_struct) {
+        PyObject* py_attr = PyString_FromString("add_item");
+        PyObject* py_field_name = ion_build_py_string(field_name);
         PyObject_CallMethodObjArgs(
             pyContainer,
-            PyString_FromString("add_item"),
-            ion_build_py_string(field_name),
+            py_attr,
+            py_field_name,
             (PyObject*)element,
             NULL
         );
+        Py_DECREF(py_attr);
+        Py_DECREF(py_field_name);
     }
     else {
         PyList_Append(pyContainer, (PyObject*)element);
@@ -484,12 +488,16 @@ static iERR ionc_write_big_int(hWRITER writer, PyObject *obj) {
     if (PyObject_RichCompareBool(temp, py_zero, Py_EQ) == 1) {
         size = py_one;
     } else {
-        size = PyNumber_Add(
-                        PyNumber_Long(PyObject_CallMethodObjArgs(
-                                        _math_module, PyUnicode_FromString("log"), temp, ion_int_base, NULL)),
-                        py_one);
-    }
+        PyObject* py_op_string = PyUnicode_FromString("log");
+        PyObject* calculate_log = PyObject_CallMethodObjArgs(_math_module, py_op_string, temp, ion_int_base, NULL);
+        PyObject* calculate_log_long = PyNumber_Long(calculate_log);
 
+        size = PyNumber_Add(calculate_log_long, py_one);
+
+        Py_DECREF(py_op_string);
+        Py_DECREF(calculate_log);
+        Py_DECREF(calculate_log_long);
+    }
     int c_size = PyLong_AsLong(size);
     IONCHECK(_ion_int_extend_digits(&ion_int_value, c_size, TRUE));
 
@@ -1157,12 +1165,20 @@ iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_s
             for (i; i < c_size; i++) {
                 int base = c_size - 1 - i;
                 // Python equivalence:  pow_value = int(pow(2^31, base))
-                PyObject* pow_value = PyNumber_Long(PyNumber_Power(ion_int_base, PyLong_FromLong(base), Py_None));
+                PyObject* pow_value = PyNumber_Power(ion_int_base, PyLong_FromLong(base), Py_None);
+                PyObject* pow_value_long = PyNumber_Long(pow_value);
 
                 // Python equivalence: py_value += pow_value * _digits[i]
-                py_value = PyNumber_Add(py_value, PyNumber_Multiply(pow_value, PyLong_FromLong(*(ion_int_value._digits + i))));
+                PyObject* calculate_digit = PyLong_FromLong(*(ion_int_value._digits + i));
+                PyObject* calculate_value = PyNumber_Multiply(pow_value_long, calculate_digit);
+                PyObject* calculate_add = py_value;
+                py_value = PyNumber_Add(calculate_add, calculate_value);
 
                 Py_DECREF(pow_value);
+                Py_DECREF(pow_value_long);
+                Py_DECREF(calculate_digit);
+                Py_DECREF(calculate_value);
+                Py_DECREF(calculate_add);
             }
 
             if (ion_int_value._signum < 0) {
@@ -1292,29 +1308,35 @@ iERR ionc_read_value(hREADER hreader, ION_TYPE t, PyObject* container, BOOL in_s
             break;
         }
         case tid_STRUCT_INT:
+        {
             ion_nature_constructor = _ionpydict_fromvalue;
             //Init a IonPyDict
+            PyObject* new_dict = PyDict_New();
             py_value = PyObject_CallFunctionObjArgs(
                 ion_nature_constructor,
                 py_ion_type_table[ion_type >> 8],
-                PyDict_New(),
+                new_dict,
                 py_annotations,
                 NULL
             );
+            Py_DECREF(new_dict);
 
             IONCHECK(ionc_read_into_container(hreader, py_value, /*is_struct=*/TRUE, emit_bare_values));
             emit_bare_values = TRUE;
             break;
+        }
         case tid_SEXP_INT:
         {
             emit_bare_values = FALSE; // Sexp values must always be emitted as IonNature because of ambiguity with list.
             // intentional fall-through
         }
         case tid_LIST_INT:
+        {
             py_value = PyList_New(0);
             IONCHECK(ionc_read_into_container(hreader, py_value, /*is_struct=*/FALSE, emit_bare_values));
             ion_nature_constructor = _ionpylist_fromvalue;
             break;
+        }
         case tid_DATAGRAM_INT:
         default:
             FAILWITH(IERR_INVALID_STATE);
