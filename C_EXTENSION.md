@@ -155,12 +155,3 @@ Below are trade offs between GitHub Actions and CodePipeline:
 |Price|Free|Cheap|
 
 We decide to use GitHub Actions eventually due to above benefits.
-
-
-
-
-
-
-
-
-
