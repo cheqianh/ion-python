@@ -115,8 +115,8 @@ ion Python        \xee\x99\x81\x83  \xde\x95  \x87\xbe\x92 \x86annot1\x86annot2\
 ### 2. Known Issues
 1. Type translation errors causing python to crash. Refer to [amzn/ion-python#151](https://github.com/amzn/ion-python/issues/151) for details.
 2. We barely see memory leak issues recently, but it is possible that the issue still exists. Refer to [amzn/ion-python#155](https://github.com/amzn/ion-python/issues/155) for details.
-3. C extension only supports at most 6 for timestamp precision.
-4. C extension only supports at most 34 decimal digits.
+3. C extension only supports at most 6 for timestamp precision. [amzn/ion-python#160](https://github.com/amzn/ion-python/issues/160)
+4. C extension only supports at most 34 decimal digits. Refer to [amzn/ion-python#159](https://github.com/amzn/ion-python/issues/159) for details.
 
 
 ## TODO
